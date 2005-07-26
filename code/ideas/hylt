@@ -1,0 +1,10 @@
+hylt - Hyperlinked Text
+
+Basically a very basic form of text with absolutely minimal markup
+(nothing more than [[links]] a la Wikipedia) plus a dead-simple
+Python viewer.  Files end in .hylt and are automagically linked
+that way; clicking on a link that doesn't exist tells you it doesn't
+(and maybe autoinvokes an editor for you?  Maybe too fancy.)  The idea
+is for stuff like novel encyclopaedias and the like where Wiki-esque
+linkage is handy but the ability to version it into something less
+esoteric than Wiki backends (like CVS or SVN) is important.
