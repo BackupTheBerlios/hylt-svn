@@ -357,6 +357,11 @@ def hyltMain (meta_screen, starting_filename):
                moveCursorForLink (core_state, 1)
          elif ord (' ') == keypress:
             moveCursorForLink (core_state, dir_delta)
+         elif ord ('e') == keypress:
+            if None != os.getenv ("EDITOR", None):
+               rel_name = core_state["link_list"][core_state["selected_link"]]
+               real_filename = os.path.join (core_state["base_path"], rel_name)
+               os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
          elif curses.KEY_RIGHT == keypress:
 # The big one--jump to a new Hylt page.  First, make sure it's a real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
