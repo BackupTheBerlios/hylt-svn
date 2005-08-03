@@ -192,7 +192,7 @@ def displayLinkInfo (screen, core_state):
       screen.addnstr (0, 0, link_list[link_num], core_state["x"] - 1)
 
 def noteMissingPage (screen, filename, x):
-   print_str = filename + " is missing.  Perhaps you should add it?"
+   print_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    for i in range (3):
       screen.clear ()
       screen.attrset (curses.A_BOLD)
@@ -291,10 +291,11 @@ def hyltMain (meta_screen, starting_filename):
       if fresh_page:
          readHyltFile (filename, core_state) 
 
-         sys.stderr.write (repr (core_state["data_array"]))
-         sys.stderr.write ("\n\n\n")
+         sys.stderr.write ("\n\n\nLink List:\n")
          sys.stderr.write (repr (core_state["link_list"]))
-         core_state["history"].append (filename)
+         sys.stderr.write ("\n\n\nHistory:\n")
+         sys.stderr.write (repr (core_state["history"]))
+
          core_state["title"] = generateTitle (starting_filename)
          core_state["cx"] = 0
          core_state["cy"] = 0
@@ -332,9 +333,9 @@ def hyltMain (meta_screen, starting_filename):
          core_state["selected_link"] = None
 
       elif curses.KEY_LEFT == keypress:
-         if len (core_state["history"]) > 1:
-            core_state["history"].pop ()
+         if len (core_state["history"]) > 0:
             filename = core_state["history"][-1]
+            core_state["history"].pop ()
             fresh_page = True
 
 # Don't even bother with arrow keys other than back unless link count > 0.
@@ -361,7 +362,8 @@ def hyltMain (meta_screen, starting_filename):
             rel_name = core_state["link_list"][core_state["selected_link"]]
             real_filename = os.path.join (core_state["base_path"], rel_name)
             if os.path.isfile (real_filename):
-# Go!
+# Go!  Add this page to the history so we can come back.
+               core_state["history"].append (filename)
                filename = rel_name
                fresh_page = True
             else:
