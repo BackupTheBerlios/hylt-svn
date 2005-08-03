@@ -12,10 +12,8 @@ import curses
 import curses.wrapper
 import optparse
 import os.path
-import random
 import sys
-
-randrange = random.randrange
+import time
 
 exit_message = "Thanks for using Hylt!"
 
@@ -193,6 +191,24 @@ def displayLinkInfo (screen, core_state):
    if None != link_num:
       screen.addnstr (0, 0, link_list[link_num], core_state["x"] - 1)
 
+def noteMissingPage (screen, filename, x):
+   print_str = filename + " is missing.  Perhaps you should add it?"
+   for i in range (3):
+      screen.clear ()
+      screen.attrset (curses.A_BOLD)
+      screen.hline (0, 0, ' ', x)
+      screen.addnstr (0, 0, print_str, x - 1)
+      screen.noutrefresh ()
+      curses.doupdate ()
+      time.sleep (0.5)
+      screen.clear ()
+      screen.attrset (curses.A_NORMAL)
+      screen.hline (0, 0, ' ', x)
+      screen.addnstr (0, 0, print_str, x - 1)
+      screen.noutrefresh ()
+      curses.doupdate ()
+      time.sleep (0.5)
+
 def moveCursorForLink (core_state, direction):
 
    data_array = core_state["data_array"]
@@ -255,7 +271,7 @@ def hyltMain (meta_screen, starting_filename):
 
 # Keep the "root path", as all Hylt links are relative.
    core_state["base_path"] = os.path.dirname (starting_filename)
-   core_state["filename"] = os.path.basename (starting_filename)
+   filename = os.path.basename (starting_filename)
    
 
 # Create the three windows we need.
@@ -265,7 +281,7 @@ def hyltMain (meta_screen, starting_filename):
 
    window_dict = {"top": top, "main": main, "bottom": bottom}
 
-   core_state["history"] = [core_state["filename"]]
+   core_state["history"] = []
 
    fresh_page = True
    done = False
@@ -278,6 +294,7 @@ def hyltMain (meta_screen, starting_filename):
          sys.stderr.write (repr (core_state["data_array"]))
          sys.stderr.write ("\n\n\n")
          sys.stderr.write (repr (core_state["link_list"]))
+         core_state["history"].append (filename)
          core_state["title"] = generateTitle (starting_filename)
          core_state["cx"] = 0
          core_state["cy"] = 0
@@ -317,7 +334,7 @@ def hyltMain (meta_screen, starting_filename):
       elif curses.KEY_LEFT == keypress:
          if len (core_state["history"]) > 1:
             core_state["history"].pop ()
-            core_state["filename"] = core_state["history"][-1]
+            filename = core_state["history"][-1]
             fresh_page = True
 
 # Don't even bother with arrow keys other than back unless link count > 0.
@@ -339,6 +356,17 @@ def hyltMain (meta_screen, starting_filename):
                moveCursorForLink (core_state, 1)
          elif ord (' ') == keypress:
             moveCursorForLink (core_state, dir_delta)
+         elif curses.KEY_RIGHT == keypress:
+# The big one--jump to a new Hylt page.  First, make sure it's a real page.
+            rel_name = core_state["link_list"][core_state["selected_link"]]
+            real_filename = os.path.join (core_state["base_path"], rel_name)
+            if os.path.isfile (real_filename):
+# Go!
+               filename = rel_name
+               fresh_page = True
+            else:
+               noteMissingPage (bottom, rel_name, core_state["x"])
+               
 
 if "__main__" == __name__:
    core_state = {}
