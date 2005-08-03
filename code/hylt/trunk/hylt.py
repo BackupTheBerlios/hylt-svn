@@ -296,7 +296,7 @@ def hyltMain (meta_screen, starting_filename):
          sys.stderr.write ("\n\n\nHistory:\n")
          sys.stderr.write (repr (core_state["history"]))
 
-         core_state["title"] = generateTitle (starting_filename)
+         core_state["title"] = generateTitle (filename)
          core_state["cx"] = 0
          core_state["cy"] = 0
          if core_state["link_count"] > 0:
