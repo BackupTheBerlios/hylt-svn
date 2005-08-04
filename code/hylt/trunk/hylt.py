@@ -2,7 +2,7 @@
 
 ##########
 #
-# hylt v.200508021730
+# hylt v0.1.0
 #
 # copyleft 2005 phil bordelon
 #
