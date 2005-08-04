@@ -4,7 +4,7 @@
 #
 # hylt v0.1.0
 #
-# copyleft 2005 phil bordelon
+# copyleft 2005 phil bordelon, jochen eisinger
 #
 ##########
 
@@ -85,10 +85,12 @@ def exportToHTML (filename, core_state):
 	       link_target = link_list[open_link]
 	       file.writelines (("<a href=\"", link_target[:-4], "html\">"))
 
-	 if curr_char == '<':
+	 if '<' == curr_char:
 	    file.write ("&lt;")
-	 elif curr_char == '&':
+	 elif '&' == curr_char:
 	    file.write ("&amp;")
+         elif '>' == curr_char:
+            file.write ("&gt;")
 	 else:
 	    file.write (curr_char)
 
