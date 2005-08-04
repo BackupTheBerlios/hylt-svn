@@ -46,6 +46,62 @@ def generateTitle (filename):
 
 ###
 
+###
+# export the wiki page in core_states to the XHTML document 'filename'
+#
+def exportToHTML (filename, core_state):
+   
+   data_array = core_state["data_array"]
+   link_list = core_state["link_list"]
+   
+   file = open (os.path.join (core_state["base_path"], filename), "w")
+
+   file.write ("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+   file.write ("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n")
+   file.write ("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n")
+   file.write ("  <head>\n")
+   file.write ("  <meta http-equiv=\"Content-Type\" content=\"application/xhtml+xml; charset=utf-8\" />\n")
+   file.writelines (("    <title>", generateTitle(filename), "</title>\n"))
+   file.write ("  </head>\n")
+   file.write ("  <body>\n")
+   file.write ("    <div id=\"main\">\n")
+
+   for row_num in range (0, len (data_array)):
+
+      curr_row = data_array[row_num]
+      open_link = None;
+
+      for col_num in range (0, len(curr_row)):
+
+         (curr_char, curr_link) = curr_row[col_num]
+
+	 if curr_link != open_link:
+	    if open_link != None:
+	      file.write ("</a>")
+
+	    open_link = curr_link
+
+	    if open_link != None:
+	       link_target = link_list[open_link]
+	       file.writelines (("<a href=\"", link_target[:-4], "html\">"))
+
+	 if curr_char == '<':
+	    file.write ("&lt;")
+	 elif curr_char == '&':
+	    file.write ("&amp;")
+	 else:
+	    file.write (curr_char)
+
+      if open_link != None:
+	 file.write ("</a>\n")
+      file.write ("<br/>\n")
+
+   file.write ("    </div>\n")
+   file.write ("  </body>\n")
+   file.write ("</html>\n")
+   file.close ()
+
+
 def readHyltFile (filename, core_state):
 
    data_array = []
@@ -191,6 +247,13 @@ def displayLinkInfo (screen, core_state):
    if None != link_num:
       screen.addnstr (0, 0, link_list[link_num], core_state["x"] - 1)
 
+def displayNote (screen, note, core_state):
+   screen.clear ()
+   screen.attrset (curses.A_REVERSE)
+   screen.hline (0, 0, ' ', core_state["x"])
+   screen.addnstr (0, 0, note, core_state["x"] - 1)
+   screen.noutrefresh ()
+
 def noteMissingPage (screen, filename, x):
    print_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    for i in range (3):
@@ -333,6 +396,9 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('l') == keypress:
          core_state["cx"] += min (max (1, meta_x / 2), 8)
          window_dict["main"]["r"] = True
+      elif ord ('x') == keypress:
+	 exportToHTML (filename[:-4] + "html", core_state)
+	 displayNote (bottom, "Exported to '" + filename[:-4] + "html' ...", core_state)
       elif curses.KEY_NPAGE == keypress:
          core_state["cy"] += meta_y - 4
          window_dict["main"]["r"] = True
