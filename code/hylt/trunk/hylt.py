@@ -4,7 +4,7 @@
 #
 # hylt v0.1.0
 #
-# copyleft 2005 phil bordelon, jochen eisinger
+# copyleft 2005 phil bordelon, jochen eisinger, martin ockajak
 #
 ##########
 
