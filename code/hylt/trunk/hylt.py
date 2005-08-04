@@ -238,6 +238,8 @@ def displayLinkInfo (screen, core_state):
    link_list = core_state["link_list"]
    if None != link_num:
       displayNote (screen, link_list[link_num], core_state["x"])
+   else:
+      displayNote (screen, "No links exist on this page.", core_state["x"])
 
 def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
    screen.clear ()
