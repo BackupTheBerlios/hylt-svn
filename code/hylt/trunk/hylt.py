@@ -261,20 +261,19 @@ def fixCursorCoords (core_state):
 def hyltMain (meta_screen, starting_filename):
 
    curses.curs_set(0)
-# There are three windows: a top status bar, a primary screen, and a bottom
-# status bar.  There is also the main screen, of course.
-   window_dict = {}
 
 # Remember: Parameters in the order of (y, x).
    meta_y, meta_x = meta_screen.getmaxyx()
    core_state = {"y": meta_y, "x": meta_x}
 
-# Keep the "root path", as all Hylt links are relative.
+# Keep the "base path", as all Hylt links are relative.
+# TODO: Keep people from backing out of the base path using .. or the like.
    core_state["base_path"] = os.path.dirname (starting_filename)
    filename = os.path.basename (starting_filename)
    
 
-# Create the three windows we need.
+# There are three windows: a top status bar, a primary screen, and a bottom
+# status bar.  There is also the main screen, of course.  Create them.
    top = meta_screen.subwin (1, meta_x, 0, 0)
    main = meta_screen.subwin (meta_y - 2, meta_x, 1, 0)
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
@@ -311,8 +310,6 @@ def hyltMain (meta_screen, starting_filename):
          dir_delta = 1
          fresh_page = False
 
-      curses.curs_set(1)
-      curses.curs_set(0)
       fixCursorCoords (core_state)
       if True == window_dict["top"]["r"]:
          displayHeader (top, core_state)
@@ -385,6 +382,8 @@ def hyltMain (meta_screen, starting_filename):
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
 
                curses.reset_prog_mode ()
+               curses.curs_set(1)
+               curses.curs_set(0)
                window_dict["top"]["r"] = True
                window_dict["main"]["r"] = True
                window_dict["bottom"]["r"] = True
@@ -395,6 +394,8 @@ def hyltMain (meta_screen, starting_filename):
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
               
                curses.reset_prog_mode ()
+               curses.curs_set(1)
+               curses.curs_set(0)
                fresh_page = True
 
          elif curses.KEY_RIGHT == keypress:
