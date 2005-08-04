@@ -383,7 +383,7 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('r') == keypress:
          fresh_page = True
 
-      elif curses.KEY_LEFT == keypress:
+      elif curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress:
          if len (core_state["history"]) > 0:
             filename = core_state["history"][-1]
             core_state["history"].pop ()
@@ -438,7 +438,7 @@ def hyltMain (meta_screen, starting_filename):
                curses.curs_set(0)
                fresh_page = True
 
-         elif curses.KEY_RIGHT == keypress:
+         elif curses.KEY_RIGHT == keypress or 10 == keypress or curses.KEY_ENTER == keypress:
 # The big one--jump to a new Hylt page.  First, make sure it's a real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
             real_filename = os.path.join (core_state["base_path"], rel_name)
