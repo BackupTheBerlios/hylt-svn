@@ -17,13 +17,6 @@ import time
 
 exit_message = "Thanks for using Hylt!"
 
-def redrawWindows (window_dict):
-   for elem_dict in window_dict.values ():
-      if True == elem_dict["r"]:
-         elem_dict["w"].noutrefresh ()
-         elem_dict["r"] = False
-   curses.doupdate ()
-
 def generateTitle (filename):
    to_return = ""
 
@@ -234,43 +227,32 @@ def displayPage (screen, core_state):
 # Down to the next row!
       display_y += 1
 
+# Mark the screen as needing refresh.
+   screen.noutrefresh ()
+
 def displayHeader (screen, core_state):
-   screen.clear ()
-   screen.attrset (curses.A_REVERSE)
-   screen.hline (0, 0, ' ', core_state["x"])
-   screen.addnstr (0, 0, core_state["title"], core_state["x"] - 1)
+   displayNote (screen, core_state["title"], core_state["x"])
 
 def displayLinkInfo (screen, core_state):
-   screen.clear ()
-   screen.attrset (curses.A_REVERSE)
-   screen.hline (0, 0, ' ', core_state["x"])
    link_num = core_state["selected_link"]
    link_list = core_state["link_list"]
    if None != link_num:
-      screen.addnstr (0, 0, link_list[link_num], core_state["x"] - 1)
+      displayNote (screen, link_list[link_num], core_state["x"])
 
-def displayNote (screen, note, core_state):
+def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
    screen.clear ()
-   screen.attrset (curses.A_REVERSE)
-   screen.hline (0, 0, ' ', core_state["x"])
-   screen.addnstr (0, 0, note, core_state["x"] - 1)
+   screen.attrset (attribute)
+   screen.hline (0, 0, ' ', screen_width)
+   screen.addnstr (0, 0, note, screen_width - 1)
    screen.noutrefresh ()
 
 def noteMissingPage (screen, filename, x):
    print_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    for i in range (3):
-      screen.clear ()
-      screen.attrset (curses.A_BOLD)
-      screen.hline (0, 0, ' ', x)
-      screen.addnstr (0, 0, print_str, x - 1)
-      screen.noutrefresh ()
+      displayNote (screen, print_str, x, curses.A_BOLD)
       curses.doupdate ()
       time.sleep (0.5)
-      screen.clear ()
-      screen.attrset (curses.A_NORMAL)
-      screen.hline (0, 0, ' ', x)
-      screen.addnstr (0, 0, print_str, x - 1)
-      screen.noutrefresh ()
+      displayNote (screen, print_str, x, curses.A_NORMAL)
       curses.doupdate ()
       time.sleep (0.5)
 
@@ -343,12 +325,6 @@ def hyltMain (meta_screen, starting_filename):
    main = meta_screen.subwin (meta_y - 2, meta_x, 1, 0)
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
 
-   window_dict = {
-      "top": {"w": top, "r": True},
-      "main": {"w": main, "r": True},
-      "bottom": {"w": bottom, "r": True}
-   }
-
    core_state["history"] = []
 
    fresh_page = True
@@ -356,8 +332,9 @@ def hyltMain (meta_screen, starting_filename):
 
    curses.def_prog_mode ()
 
-   while not done:
+   main_needs_redraw = True
 
+   while not done:
       if fresh_page:
          readHyltFile (filename, core_state) 
 
@@ -369,44 +346,40 @@ def hyltMain (meta_screen, starting_filename):
          else:
             core_state["selected_link"] = None
      
-         window_dict["top"]["r"] = True
-         window_dict["main"]["r"] = True
-         window_dict["bottom"]["r"] = True
          dir_delta = 1
          fresh_page = False
+         main_needs_redraw = True
+         displayHeader (top, core_state)
+         displayLinkInfo (bottom, core_state)
 
       fixCursorCoords (core_state)
-      if True == window_dict["top"]["r"]:
-         displayHeader (top, core_state)
-      if True == window_dict["main"]["r"]:
+      if main_needs_redraw:
          displayPage (main, core_state)
-      if True == window_dict["bottom"]["r"]:
-         displayLinkInfo (bottom, core_state)
-      redrawWindows (window_dict)
+      curses.doupdate ()
       keypress = meta_screen.getch()
       if ord ('q') == keypress:
          done = True
       elif ord ('h') == keypress:
          core_state["cx"] -= min (max (1, meta_x / 2), 8)
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif ord ('j') == keypress:
          core_state["cy"] += min (max (1, meta_x / 2), 8)
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif ord ('k') == keypress:
          core_state["cy"] -= min (max (1, meta_x / 2), 8)
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif ord ('l') == keypress:
          core_state["cx"] += min (max (1, meta_x / 2), 8)
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif ord ('x') == keypress:
 	 exportToHTML (filename[:-4] + "html", core_state)
 	 displayNote (bottom, "Exported to '" + filename[:-4] + "html' ...", core_state)
       elif curses.KEY_NPAGE == keypress:
          core_state["cy"] += meta_y - 4
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif curses.KEY_PPAGE == keypress:
          core_state["cy"] -= meta_y - 4
-         window_dict["main"]["r"] = True
+         main_needs_redraw = True
       elif ord ('r') == keypress:
          fresh_page = True
 
@@ -425,8 +398,8 @@ def hyltMain (meta_screen, starting_filename):
             else:
                core_state["selected_link"] -= 1
                moveCursorForLink (core_state, -1)
-               window_dict["bottom"]["r"] = True
-            window_dict["main"]["r"] = True
+               displayLinkInfo (bottom, core_state)
+            main_needs_redraw = True
 
          elif curses.KEY_DOWN == keypress:
             if core_state["selected_link"] == core_state["link_count"] - 1:
@@ -435,13 +408,12 @@ def hyltMain (meta_screen, starting_filename):
             else:
                core_state["selected_link"] += 1
                moveCursorForLink (core_state, 1)
-               window_dict["bottom"]["r"] = True
-
-            window_dict["main"]["r"] = True
+               displayLinkInfo (bottom, core_state)
+            main_needs_redraw = True
 
          elif ord (' ') == keypress:
             moveCursorForLink (core_state, dir_delta)
-            window_dict["main"]["r"] = True
+            main_needs_redraw = True
 
          elif ord ('e') == keypress:
             if None != os.getenv ("EDITOR", None):
@@ -452,9 +424,9 @@ def hyltMain (meta_screen, starting_filename):
                curses.reset_prog_mode ()
                curses.curs_set(1)
                curses.curs_set(0)
-               window_dict["top"]["r"] = True
-               window_dict["main"]["r"] = True
-               window_dict["bottom"]["r"] = True
+               main_needs_redraw = True
+               displayHeader (top, core_state)
+               displayLinkInfo (bottom, core_state)
 
          elif ord ('E') == keypress:
             if None != os.getenv ("EDITOR", None):
@@ -477,7 +449,7 @@ def hyltMain (meta_screen, starting_filename):
                fresh_page = True
             else:
                noteMissingPage (bottom, rel_name, core_state["x"])
-               window_dict["bottom"]["r"] = True
+               displayLinkInfo (bottom, core_state)
                
 
 if "__main__" == __name__:
