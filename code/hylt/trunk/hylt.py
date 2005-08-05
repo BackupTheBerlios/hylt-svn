@@ -132,7 +132,9 @@ def readHyltFile (filename, core_state):
    
    data_array = []
 
-   file = open (os.path.join (core_state["base_path"], filename), "r")
+   base_path = core_state["base_path"]
+   curr_base_path = core_state["curr_base_path"]
+   file = open (os.path.join (base_path, filename), "r")
    curr_state = "text"
    curr_link = None
    link_count = 0
@@ -181,19 +183,31 @@ def readHyltFile (filename, core_state):
          elif curr_state == "firstclosebracket_normal":
             if (']' == char):
                curr_state = "text"
-               
-               # We've got the full link name.  Put it into the array, with
-               # links.  Gotta kill the path first, though.
-               link_text = link_filename.split ("/")[-1]
-               link_list.append (os.path.normcase(link_filename + ".hylt"))
-               for link_char in link_text:
-               
-                  # Only convert underscores.
-                  if ('_' == link_char):
-                     new_array_line.append ((' ', link_count))
-                  else:
-                     new_array_line.append ((link_char, link_count))
-               link_count += 1
+              
+               # Okay.  Make sure this link doesn't try to escape from the
+               # base path.
+               raw_link = os.path.normpath (link_filename + ".hylt")
+               possible_link = os.path.join (curr_base_path, raw_link)
+               safe_link = safePath (possible_link, base_path)
+               if None != safe_link:
+
+                  # Add the link to the list of links.
+                  link_list.append (raw_link)
+
+                  # We've got the full link name.  Put it into the array, with
+                  # links.  Gotta kill the path first, though.
+                  link_text = link_filename.split ("/")[-1]
+
+                  for link_char in link_text:
+
+                     # Only convert underscores.
+                     if ('_' == link_char):
+                        new_array_line.append ((' ', link_count))
+                     else:
+                        new_array_line.append ((link_char, link_count))
+                  link_count += 1
+
+               # else do nothing; this wasn't a valid link.
             else:
                curr_state = "link_filename"
                link_filename += ']'
@@ -206,10 +220,21 @@ def readHyltFile (filename, core_state):
          elif curr_state == "firstclosebracket_pretty":
             if (']' == char):
                curr_state = "text"
-               link_list.append (os.path.normcase(link_filename + ".hylt"))
-               for link_char in link_text:
-                  new_array_line.append ((link_char, link_count))
-               link_count += 1
+
+               # Okay.  Make sure this link doesn't try to escape from the
+               # base path.
+               raw_link = os.path.normpath (link_filename + ".hylt")
+               possible_link = os.path.join (curr_base_path, raw_link)
+               safe_link = safePath (possible_link, base_path)
+               if None != safe_link:
+
+                  # Add the link to the list of links.
+                  link_list.append (raw_link)
+                  
+                  # Add the pretty version of the link name to the array.
+                  for link_char in link_text:
+                     new_array_line.append ((link_char, link_count))
+                  link_count += 1
             else:
                curr_state = "pretty_link"
                link_text += ']'
@@ -341,13 +366,6 @@ def noteMissingPage (screen, filename, x):
    missing_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    displayBlinkingNote (screen, missing_str, x)
 
-def noteAttemptedEscape (screen, filename, x):
-   """Note an attempted escape from the base of the Hylt collection.
-   """
-
-   escape_str = "|" + filename + "| is outside the base path."
-   displayBlinkingNote (screen, escape_str, x)
- 
 def moveCursorForLink (core_state, direction):
    """When the selected link changes (usually due to an arrow
    press), the screen cursor may need to move out of the visible
@@ -432,7 +450,7 @@ def safePath (path, base_path):
       # path, so that when we join it with the base path, it doesn't
       # keep stacking.  The lazy way, of course, is to just return
       # path; do that.
-      to_return = attempted_path
+      to_return = path
 
    return to_return
 
@@ -457,7 +475,7 @@ def hyltMain (meta_screen, starting_filename):
    # Keep the "base path", as all Hylt links are relative.
    base_path = core_state["base_path"] = os.path.dirname (starting_filename)
    filename = os.path.basename (starting_filename)
-   curr_base_path = "./"
+   core_state["curr_base_path"] = core_state["base_path"] 
    
 
    # There are three windows: a top status bar, a primary screen, and a bottom
@@ -478,7 +496,7 @@ def hyltMain (meta_screen, starting_filename):
    while not done:
       if fresh_page:
 
-         curr_base_path = os.path.dirname (filename)
+         core_state["curr_base_path"] = os.path.dirname (filename)
 
          readHyltFile (filename, core_state) 
 #        debugPrintPage (core_state["data_array"])
@@ -588,24 +606,17 @@ def hyltMain (meta_screen, starting_filename):
             # The big one--jump to a new Hylt page.  First, make sure it's a
             # real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
-
-            # Since links are fully relative, we need to join the current
-            # base path to the link and then test that against the "real"
-            # base path.
-            attempted_path = os.path.join (curr_base_path, rel_name)
-            ret_filename = safePath (attempted_path, base_path)
-            # safePath returns None if the path was an attempt to escape.
-            if None == ret_filename:
-               noteAttemptedEscape (bottom, rel_name, core_state["x"])
-               displayLinkInfo (bottom, core_state)
-            elif os.path.isfile (ret_filename):
+            rel_path = os.path.normpath (os.path.join (
+             core_state["curr_base_path"], rel_name))
+            real_path = os.path.join (base_path, rel_path)
+            if os.path.isfile (real_path):
             
                # Go!  Add this page to the history so we can come back.
                core_state["history"].append (filename)
-               filename = unBasePath (ret_filename, base_path)
+               filename = rel_path
                fresh_page = True
             else:
-               noteMissingPage (bottom, ret_filename, core_state["x"])
+               noteMissingPage (bottom, rel_path, core_state["x"])
                displayLinkInfo (bottom, core_state)
                
 
