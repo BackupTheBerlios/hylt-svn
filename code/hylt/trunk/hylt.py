@@ -2,7 +2,7 @@
 
 # hylt.py - HYperLinked Text curses-based viewer
 #
-# Copyright 2005 Phil Bordelon, Jochen Eisinger, Martin Ockajak.
+# Copyright 2005 Phil Bordelon, Jochen Eisinger, Martin Ockajak, John Vernon.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
