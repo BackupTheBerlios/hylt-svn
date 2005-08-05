@@ -1,0 +1,45 @@
+There are lots of things that still can be/need to be done with Hylt.
+This file attempts to list those things that we know about and are
+planning to work on.  Names in parentheses show developers planning
+on implementing these.
+
+Core:
+   * Better error handling.  Lots of things could probably tank the
+     program right now.
+   * Tighter separation.  Many variables are stored in a "state"
+     dictionary that gets passed around between functions.  This
+     should probably be made less prevalent.
+   * Keep paths from escaping the root directory.  We don't want
+     people rampaging across the filesystem.
+   * Configuration file handling.  While there aren't many things
+     that need options now, one will be the location of the help
+     files--and perhaps there should be a "world help" file (the
+     sort that explains how you use the viewer) and a per-instance
+     help file (the sort that explains the purpose of a given Hylt
+     collection).  A location for storing HTML renders (per-user,
+     probably, not per-instance) would also be a good idea.
+   * Command-line parsing.  Files passed in should be handled
+     better.
+
+Documentation:
+   * The Hylt format needs to be documented.  It's not complex, but
+     that's no excuse. (phil)
+
+Editing:
+   * Autocreate subdirectories if they don't already exist. (phil)
+
+Exporting:
+   * The ability to export an entire Hylt collection into XHTML
+     (using the code already contributed by c0ffee) would be nice,
+     as it could allow scripting to sync up a local Hylt collo with
+     a website. (phil)
+
+UI:
+   * Online help, implented as Hylt pages, of course! (jwvernon)
+   * The ability to move forward in history, instead of following the
+     current link. (mandos)
+   * Search functionality.  Given a particular name, find files that
+     match the search string. (mandos)
+   * Search-to-history.  Given a completed search, put the results in
+     the forward-history buffer, allowing the user to bounce between
+     the pages. (mandos)
