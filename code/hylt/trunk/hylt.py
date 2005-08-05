@@ -1,12 +1,17 @@
 #!/usr/bin/env python
+"""hylt v0.1.0
 
-##########
-#
-# hylt v0.1.0
-#
-# copyleft 2005 phil bordelon, jochen eisinger, martin ockajak
-#
-##########
+Hylt is a text-based mini-Wiki, or something approaching that.  While
+technically there is a separation between the file format and the
+viewer (one could ostensibly write a GUI hylt viewer), the format
+itself is meant for minimal markup.  This program implements a
+curses-based viewer for Hylt files.
+
+hylt is copyleft 2005:
+   phil bordelon,
+   jochen eisinger,
+   martin ockajak.
+"""
 
 import curses
 import curses.wrapper
@@ -18,6 +23,10 @@ import time
 exit_message = "Thanks for using Hylt!"
 
 def generateTitle (filename):
+   """Generates the title for a given Hylt page.  This typically entails
+   stripping out any directories and converting underscores to spaces.
+   """
+   
    to_return = ""
 
 # Get rid of anything before the last slash.
@@ -37,12 +46,10 @@ def generateTitle (filename):
 
    return to_return
 
-###
-
-###
-# export the wiki page in core_states to the XHTML document 'filename'
-#
 def exportToHTML (filename, core_state):
+   """Exports a given filename to an XHTML document.  The document
+      is stored in the same location as the original file.
+   """
    
    data_array = core_state["data_array"]
    link_list = core_state["link_list"]
@@ -98,7 +105,15 @@ def exportToHTML (filename, core_state):
 
 
 def readHyltFile (filename, core_state):
+   """Given a particular filename, this function parses it and returns the
+   collection of values (in core_state) necessary for properly handling
+   the display and navigation of the page.
 
+   The parser is a finite state machine.  The FSM is actually line-based,
+   and resets at the end of each line; this means that links cannot span
+   newlines.
+   """
+   
    data_array = []
 
    file = open (os.path.join (core_state["base_path"], filename), "r")
@@ -195,6 +210,10 @@ def readHyltFile (filename, core_state):
    file.close ()
 
 def displayPage (screen, core_state):
+   """Displays the current Hylt page, given the current selected link, the
+   size of the screen, the "cursor" location (really the top left corner
+   of the screen), and so on.
+   """
 
    screen.clear ()
 # Print everything we can fit starting where the cursor is.
@@ -231,9 +250,17 @@ def displayPage (screen, core_state):
    screen.noutrefresh ()
 
 def displayHeader (screen, core_state):
+   """Displays the header for the Hylt page.
+   """
+
    displayNote (screen, core_state["title"], core_state["x"])
 
 def displayLinkInfo (screen, core_state):
+   """Displays information based on the currently selected link on
+   the Hylt page.  If there are no links on the page, displays an
+   appropriate message.
+   """
+   
    link_num = core_state["selected_link"]
    link_list = core_state["link_list"]
    if None != link_num:
@@ -242,6 +269,12 @@ def displayLinkInfo (screen, core_state):
       displayNote (screen, "No links exist on this page.", core_state["x"])
 
 def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
+   """Displays a 'note'--a single line of text, typically to the top
+   or bottom status bars.  By default, it displays the text in
+   A_REVERSE mode, as that's what the status bars usually look like;
+   however, attributes can be passed which override the default.
+   """
+   
    screen.clear ()
    screen.attrset (attribute)
    screen.hline (0, 0, ' ', screen_width)
@@ -249,6 +282,10 @@ def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
    screen.noutrefresh ()
 
 def noteMissingPage (screen, filename, x):
+   """Displays a blinking message for when you attempt to navigate
+   to a nonexistent Hylt page.
+   """
+   
    print_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    for i in range (3):
       displayNote (screen, print_str, x, curses.A_BOLD)
@@ -259,6 +296,12 @@ def noteMissingPage (screen, filename, x):
       time.sleep (0.5)
 
 def moveCursorForLink (core_state, direction):
+   """When the selected link changes (usually due to an arrow
+   press), the screen cursor may need to move out of the visible
+   area.  This function does that while attempt to maintain
+   spatial coherence--if the display was below the link, the link
+   appears near the top of the page, etc.
+   """
 
    data_array = core_state["data_array"]
 
@@ -298,6 +341,12 @@ def moveCursorForLink (core_state, direction):
 # else do nothing; it's on this page.
 
 def fixCursorCoords (core_state):
+   """Various functions may put the screen cursor out of the
+   possible range.  Instead of duplicating the errorchecking
+   everywhere, a single fixCursorCoords before an attempted
+   screen display can fix them up.
+   """
+   
    if 0 > core_state["cx"]:
       core_state["cx"] = 0
    elif core_state["cx"] > core_state["mx"] - 1:
@@ -308,6 +357,9 @@ def fixCursorCoords (core_state):
       core_state["cy"] = core_state["my"] - 1
 
 def hyltMain (meta_screen, starting_filename):
+   """The core Hylt functionality.  Contains the main input and
+   display loops, lots of initialization, and so on.
+   """
 
    curses.curs_set(0)
 
