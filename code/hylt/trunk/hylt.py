@@ -53,7 +53,7 @@ SITE_CONFIG_FILE = "/etc/hylt.conf"
 # OPTION IS ADDED!
 
 CONFIG_CONTROL_DICT = {
-   "behavior": {
+   "pyui": {
       "blink_count": {
          "type": "integer",
          "default": 3
@@ -702,7 +702,7 @@ def hyltMain (meta_screen, starting_filename):
                fresh_page = True
             else:
                noteMissingPage (bottom, rel_path, core_state["x"],
-                config["behavior"]["blink_count"])
+                config["pyui"]["blink_count"])
                displayLinkInfo (bottom, core_state)
                
 
