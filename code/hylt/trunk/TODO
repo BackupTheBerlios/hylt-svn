@@ -9,8 +9,6 @@ Core:
    * Tighter separation.  Many variables are stored in a "state"
      dictionary that gets passed around between functions.  This
      should probably be made less prevalent.
-   * Keep paths from escaping the root directory.  We don't want
-     people rampaging across the filesystem.
    * Configuration file handling.  While there aren't many things
      that need options now, one will be the location of the help
      files--and perhaps there should be a "world help" file (the

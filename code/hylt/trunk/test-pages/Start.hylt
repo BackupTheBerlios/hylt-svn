@@ -9,11 +9,13 @@ This is a long line ... tough!  You might not be able to see it all.  Don't do t
 
 [[More/Complex/Links]] shouldn't show slashes.
 
-[[No_underscores]] should appear, either.
+[[../No_underscores]] should appear, either.
 
 [[Loop 1|Enter]] the loop.
 
 [[testdir/Nest]]ing is cool.
+
+[[../This link]] shouldn't work, as it attempts to escape.
 
 Lots of junk before the next link.
 

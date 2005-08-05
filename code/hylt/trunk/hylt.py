@@ -325,6 +325,13 @@ def noteMissingPage (screen, filename, x):
    missing_str = "|" + filename + "| is missing.  Perhaps you should add it?"
    displayBlinkingNote (screen, missing_str, x)
 
+def noteAttemptedEscape (screen, filename, x):
+   """Note an attempted escape from the base of the Hylt collection.
+   """
+
+   escape_str = "|" + filename + "| is outside the base path."
+   displayBlinkingNote (screen, escape_str, x)
+ 
 def moveCursorForLink (core_state, direction):
    """When the selected link changes (usually due to an arrow
    press), the screen cursor may need to move out of the visible
@@ -387,6 +394,40 @@ def fixCursorCoords (core_state):
    elif core_state["cy"] > core_state["my"] - 1:
       core_state["cy"] = core_state["my"] - 1
 
+def safePath (path, base_path):
+   """Check the attempted path to make sure that it doesn't
+   attempt to escape the 'sandbox' created by the start page
+   definition.  Note that things like ../ are perfectly valid
+   in links; they just can't take the program out of the root
+   path.  If it tries to, return None; otherwise, return the
+   normalized version of the path.
+   """
+
+   to_return = None
+   
+   attempted_path = os.path.normpath (os.path.join (base_path, path))
+   sys.stderr.write ("\n|" + base_path + "| + |" + path + "| = |" + attempted_path + "|")
+
+   # Once it's normalized in the above line, the base path better
+   # be the first part of the path.
+
+   if attempted_path.startswith (base_path):
+
+      # Okay, it is.  However, we need to cut off that part of the
+      # path, so that when we join it with the base path, it doesn't
+      # keep stacking.  The lazy way, of course, is to just return
+      # path; do that.
+      to_return = attempted_path
+
+   return to_return
+
+def unBasePath (path, base_path):
+   """Returns a version of path with base_path removed from the
+   beginning.
+   """
+   if len (base_path) > 0:
+      return path[len (base_path) + 1:]
+
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
@@ -399,9 +440,9 @@ def hyltMain (meta_screen, starting_filename):
    core_state = {"y": meta_y, "x": meta_x}
 
    # Keep the "base path", as all Hylt links are relative.
-   # TODO: Keep people from backing out of the base path using .. or the like.
-   core_state["base_path"] = os.path.dirname (starting_filename)
+   base_path = core_state["base_path"] = os.path.dirname (starting_filename)
    filename = os.path.basename (starting_filename)
+   curr_base_path = "./"
    
 
    # There are three windows: a top status bar, a primary screen, and a bottom
@@ -421,6 +462,10 @@ def hyltMain (meta_screen, starting_filename):
 
    while not done:
       if fresh_page:
+
+         curr_base_path = os.path.dirname (filename)
+
+         sys.stderr.write ("Loading |" + filename + "|")
          readHyltFile (filename, core_state) 
 
          core_state["title"] = generateTitle (filename)
@@ -503,7 +548,7 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('e') == keypress:
             if None != os.getenv ("EDITOR", None):
                rel_name = core_state["link_list"][core_state["selected_link"]]
-               real_filename = os.path.join (core_state["base_path"], rel_name)
+               real_filename = os.path.join (base_path, rel_name)
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
 
                curses.reset_prog_mode ()
@@ -515,7 +560,7 @@ def hyltMain (meta_screen, starting_filename):
 
          elif ord ('E') == keypress:
             if None != os.getenv ("EDITOR", None):
-               real_filename = os.path.join (core_state["base_path"], filename)
+               real_filename = os.path.join (base_path, filename)
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
               
                curses.reset_prog_mode ()
@@ -528,15 +573,25 @@ def hyltMain (meta_screen, starting_filename):
             # The big one--jump to a new Hylt page.  First, make sure it's a
             # real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
-            real_filename = os.path.join (core_state["base_path"], rel_name)
-            if os.path.isfile (real_filename):
+
+            # Since links are fully relative, we need to join the current
+            # base path to the link and then test that against the "real"
+            # base path.
+            attempted_path = os.path.join (curr_base_path, rel_name)
+            sys.stderr.write ("\nAttempted path: |" + attempted_path + "|")
+            ret_filename = safePath (attempted_path, base_path)
+            # safePath returns None if the path was an attempt to escape.
+            if None == ret_filename:
+               noteAttemptedEscape (bottom, rel_name, core_state["x"])
+               displayLinkInfo (bottom, core_state)
+            elif os.path.isfile (ret_filename):
             
                # Go!  Add this page to the history so we can come back.
                core_state["history"].append (filename)
-               filename = rel_name
+               filename = unBasePath (ret_filename, base_path)
                fresh_page = True
             else:
-               noteMissingPage (bottom, rel_name, core_state["x"])
+               noteMissingPage (bottom, ret_filename, core_state["x"])
                displayLinkInfo (bottom, core_state)
                
 
@@ -547,7 +602,7 @@ if "__main__" == __name__:
    if len (args) == 1:
       filename = os.path.normpath(args[0])
    elif len (args) == 0:
-      filename = "Start.hylt"
+      filename = "./Start.hylt"
    else:
       print "ERROR: You must pass either no parameters (which uses index.hylt)"
       print "or a single filename to use."

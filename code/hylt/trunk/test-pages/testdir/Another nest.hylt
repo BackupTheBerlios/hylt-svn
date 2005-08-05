@@ -1,1 +1,5 @@
-This is another nested page.  Go to the original [[testdir/Nest]]ed page?
+This is another nested page.  Go to the original [[Nest]]ed page?
+
+You can go to [[../Start]] instead.  (Note that that's back a directory.)
+
+You can also go [[testdir/more/further]] into the rabbit hole.
