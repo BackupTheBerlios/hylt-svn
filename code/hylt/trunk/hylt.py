@@ -27,15 +27,13 @@ def generateTitle (filename):
    
    to_return = ""
 
-# Get rid of anything before the last slash.
+   # Get rid of anything before the last slash.
    basename = os.path.basename (filename)
 
-# Kill anything after the first period.
-
+   # Kill anything after the first period.
    primary_name = basename.split(".")[0]
 
-# Convert underscores to spaces.
-
+   # Convert underscores to spaces.
    for char in primary_name:
       if "_" == char:
          to_return += " "
@@ -140,16 +138,19 @@ def readHyltFile (filename, core_state):
                link_filename = ""
                pretty_link = False
             else:
-# Gotta append the bracket that wasn't followed by another one.
+            
+               # Gotta append the bracket that wasn't followed by another one.
                new_array_line.append (('[', None))
                new_array_line.append ((char, None))
                curr_state = "text"
          elif curr_state == "link_filename":
-# Convert slashes to the right direction.
+         
+            # Convert slashes to the right direction.
             if ('\\' == char):
                link_filename += '/'
             elif ('|' == char):
-# Filename done; now we get the pretty print name.
+            
+               # Filename done; now we get the pretty print name.
                curr_state = "pretty_link"
                link_text = ""
                pretty_link = True
@@ -160,12 +161,14 @@ def readHyltFile (filename, core_state):
          elif curr_state == "firstclosebracket_normal":
             if (']' == char):
                curr_state = "text"
-# We've got the full link name.  Put it into the array, with links.
-# Gotta kill the path first, though.
+               
+               # We've got the full link name.  Put it into the array, with
+               # links.  Gotta kill the path first, though.
                link_text = link_filename.split ("/")[-1]
                link_list.append (os.path.normcase(link_filename + ".hylt"))
                for link_char in link_text:
-# Only convert underscores.
+               
+                  # Only convert underscores.
                   if ('_' == link_char):
                      new_array_line.append ((' ', link_count))
                   else:
@@ -192,14 +195,14 @@ def readHyltFile (filename, core_state):
                link_text += ']'
                link_text += char
 
-# Reset state to "text" at the end of each line--no spanning links across
-# lines, too complex to handle.  If you didn't close it properly, tough.
+      # Reset state to "text" at the end of each line--no spanning links across
+      # lines, too complex to handle.  If you didn't close it properly, tough.
       curr_state = "text"
       data_array.append (new_array_line)
       if len (new_array_line) > max_width:
          max_width = len (new_array_line)
    
-# Done.  Add the data array and link list to the state.
+   # Done.  Add the data array and link list to the state.
    core_state["data_array"] = data_array
    core_state["link_list"] = link_list
    core_state["link_count"] = link_count
@@ -214,8 +217,8 @@ def displayPage (screen, core_state):
    """
 
    screen.clear ()
-# Print everything we can fit starting where the cursor is.
-
+   
+   # Print everything we can fit starting where the cursor is.
    display_y = 0
    cy = core_state["cy"]
    cx = core_state["cx"]
@@ -228,23 +231,26 @@ def displayPage (screen, core_state):
          (curr_char, curr_link) = curr_row[col_num]
 
          if None == curr_link:
-# Blit the character plain-style.
+
+            # Blit the character plain-style.
             attribute = curses.A_NORMAL
          elif curr_link == selected_link:
-# Inverse.
+
+            # Selected link. Inverse.
             attribute = curses.A_REVERSE
          else:
-# Bold it; it's a link, but not a selected one.
+
+            # Bold it; it's a link, but not a selected one.
             attribute = curses.A_BOLD
 
-# Display and increment the column.
+         # Display and increment the column.
          screen.addch (display_y, display_x, curr_char, attribute)
          display_x += 1
 
-# Down to the next row!
+      # Down to the next row!
       display_y += 1
 
-# Mark the screen as needing refresh.
+   # Mark the screen as needing refresh.
    screen.noutrefresh ()
 
 def displayHeader (screen, core_state):
@@ -326,8 +332,8 @@ def moveCursorForLink (core_state, direction):
          else:
             curr_line = data_array[loc]
 
-# Okay, we have the link's y location.  If it's on the current page, don't
-# move; otherwise, do the minimal movement that gets us there.
+   # Okay, we have the link's y location.  If it's on the current page, don't
+   # move; otherwise, do the minimal movement that gets us there.
    curr_top = core_state["cy"]
    curr_bottom = curr_top + core_state["y"] - 3
    if link_y < curr_top:
@@ -336,7 +342,8 @@ def moveCursorForLink (core_state, direction):
    elif link_y > curr_bottom:
       distance = link_y - curr_bottom
       core_state["cy"] += distance + 1
-# else do nothing; it's on this page.
+      
+   # else do nothing; it's on this page.
 
 def fixCursorCoords (core_state):
    """Various functions may put the screen cursor out of the
@@ -361,18 +368,18 @@ def hyltMain (meta_screen, starting_filename):
 
    curses.curs_set(0)
 
-# Remember: Parameters in the order of (y, x).
+   # Remember: Parameters are in the order of (y, x).
    meta_y, meta_x = meta_screen.getmaxyx()
    core_state = {"y": meta_y, "x": meta_x}
 
-# Keep the "base path", as all Hylt links are relative.
-# TODO: Keep people from backing out of the base path using .. or the like.
+   # Keep the "base path", as all Hylt links are relative.
+   # TODO: Keep people from backing out of the base path using .. or the like.
    core_state["base_path"] = os.path.dirname (starting_filename)
    filename = os.path.basename (starting_filename)
    
 
-# There are three windows: a top status bar, a primary screen, and a bottom
-# status bar.  There is also the main screen, of course.  Create them.
+   # There are three windows: a top status bar, a primary screen, and a bottom
+   # status bar.  There is also the main screen, of course.  Create them.
    top = meta_screen.subwin (1, meta_x, 0, 0)
    main = meta_screen.subwin (meta_y - 2, meta_x, 1, 0)
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
@@ -441,7 +448,7 @@ def hyltMain (meta_screen, starting_filename):
             core_state["history"].pop ()
             fresh_page = True
 
-# Don't even bother with arrow keys other than back unless link count > 0.
+      # Don't even bother with arrow keys other than back unless link count > 0.
       elif core_state["link_count"] > 0:
          if curses.KEY_UP == keypress:
             if core_state["selected_link"] == 0:
@@ -491,11 +498,14 @@ def hyltMain (meta_screen, starting_filename):
                fresh_page = True
 
          elif curses.KEY_RIGHT == keypress or 10 == keypress or curses.KEY_ENTER == keypress:
-# The big one--jump to a new Hylt page.  First, make sure it's a real page.
+         
+            # The big one--jump to a new Hylt page.  First, make sure it's a
+            # real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
             real_filename = os.path.join (core_state["base_path"], rel_name)
             if os.path.isfile (real_filename):
-# Go!  Add this page to the history so we can come back.
+            
+               # Go!  Add this page to the history so we can come back.
                core_state["history"].append (filename)
                filename = rel_name
                fresh_page = True
