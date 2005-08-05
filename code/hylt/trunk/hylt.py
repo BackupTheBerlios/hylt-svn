@@ -458,13 +458,6 @@ def safePath (path, base_path):
 
    return to_return
 
-def unBasePath (path, base_path):
-   """Returns a version of path with base_path removed from the
-   beginning.
-   """
-   if len (base_path) > 0:
-      return path[len (base_path) + 1:]
-
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
