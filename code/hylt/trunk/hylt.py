@@ -30,15 +30,19 @@ curses-based viewer for Hylt files.
 hylt is copyleft 2005:
    phil bordelon,
    jochen eisinger,
-   martin ockajak.
+   martin ockajak,
+   john vernon.
 """
 
+import ConfigParser
 import curses
 import curses.wrapper
 import optparse
 import os.path
 import sys
 import time
+
+SITE_CONFIGURATION = "/etc/hylt.conf"
 
 def generateTitle (filename):
    """Generates the title for a given Hylt page.  This typically entails
@@ -358,13 +362,13 @@ def displayBlinkingNote (screen, disp_string, x, count = 3, delay = 0.5):
       curses.doupdate ()
       time.sleep (delay)
 
-def noteMissingPage (screen, filename, x):
+def noteMissingPage (screen, filename, x, count):
    """Displays a blinking message for when you attempt to navigate
    to a nonexistent Hylt page.
    """
    
    missing_str = "|" + filename + "| is missing.  Perhaps you should add it?"
-   displayBlinkingNote (screen, missing_str, x)
+   displayBlinkingNote (screen, missing_str, x, count)
 
 def moveCursorForLink (core_state, direction):
    """When the selected link changes (usually due to an arrow
@@ -483,6 +487,11 @@ def hyltMain (meta_screen, starting_filename):
    top = meta_screen.subwin (1, meta_x, 0, 0)
    main = meta_screen.subwin (meta_y - 2, meta_x, 1, 0)
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
+
+   # Parse the config file(s) and set parameter values
+   configuration = ConfigParser.ConfigParser ()
+   configuration.read ([SITE_CONFIGURATION, os.path.expanduser ("~/.hylt.conf"), os.path.join (core_state["base_path"], "hylt.conf")])
+   core_state["blink_count"] = configuration.getint("behavior","blink_count")
 
    core_state["history"] = []
 
@@ -616,7 +625,7 @@ def hyltMain (meta_screen, starting_filename):
                filename = rel_path
                fresh_page = True
             else:
-               noteMissingPage (bottom, rel_path, core_state["x"])
+               noteMissingPage (bottom, rel_path, core_state["x"], core_state["blink_count"])
                displayLinkInfo (bottom, core_state)
                
 
