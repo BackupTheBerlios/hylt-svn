@@ -1,0 +1,13 @@
+The Hylt parser has several edge conditions.  For example, links cannot
+span a newline.  For that reason, you should see no link here: [[a link that shouldn't appear
+]]
+^--- There should be two brackets there, as they have no matching left
+brackets.
+
+[ [ [ [ ] ] ] ] <---- Various brackets that don't complete links.
+
+[[[This[link] has brackets embedded in it]]] and an extra bracket at the
+beginning and end.
+
+[[Start|This link [doesn't] have embedded brackets]]], but the pretty
+text does.
