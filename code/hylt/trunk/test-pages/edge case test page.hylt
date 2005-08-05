@@ -11,3 +11,7 @@ beginning and end.
 
 [[Start|This link [doesn't] have embedded brackets]]], but the pretty
 text does.
+
+\[\[This should look like a link in raw Hylt.]] \\\\\\ <--- 3 slashes.
+
+\T\h\e\s\e\ \a\r\e\ \e\s\c\a\p\e\d\ \e\v\e\n\ \t\h\o\u\g\h\ \t\h\e\y \d\o\n\'\t\ \n\e\e\d\ \i\t\.
