@@ -491,7 +491,10 @@ def hyltMain (meta_screen, starting_filename):
    # Parse the config file(s) and set parameter values
    configuration = ConfigParser.ConfigParser ()
    configuration.read ([SITE_CONFIGURATION, os.path.expanduser ("~/.hylt.conf"), os.path.join (core_state["base_path"], "hylt.conf")])
-   core_state["blink_count"] = configuration.getint("behavior","blink_count")
+   if configuration.has_option("behavior","blink_count"):
+      core_state["blink_count"] = configuration.getint("behavior","blink_count")
+   else:
+      core_state["blink_count"] = 3
 
    core_state["history"] = []
 
