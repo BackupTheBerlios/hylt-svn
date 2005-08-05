@@ -20,8 +20,6 @@ import os.path
 import sys
 import time
 
-exit_message = "Thanks for using Hylt!"
-
 def generateTitle (filename):
    """Generates the title for a given Hylt page.  This typically entails
    stripping out any directories and converting underscores to spaces.
@@ -519,4 +517,3 @@ if "__main__" == __name__:
       print "or a single filename to use."
       sys.exit (0)
    curses.wrapper (hyltMain, filename)
-   print exit_message
