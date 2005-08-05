@@ -111,7 +111,7 @@ def exportToHTML (filename, core_state):
 	    file.write (curr_char)
 
       if open_link != None:
-	 file.write ("</a>\n")
+	 file.write ("</a>")
       file.write ("<br/>\n")
 
    file.write ("    </div>\n")
