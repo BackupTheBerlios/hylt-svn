@@ -15,3 +15,6 @@ text does.
 \[\[This should look like a link in raw Hylt.]] \\\\\\ <--- 3 slashes.
 
 \T\h\e\s\e\ \a\r\e\ \e\s\c\a\p\e\d\ \e\v\e\n\ \t\h\o\u\g\h\ \t\h\e\y \d\o\n\'\t\ \n\e\e\d\ \i\t\.
+
+This line has an unterminated link attempt; it should just not show up. [[Do you see this?  You shouldn't.]
+This line also has one. [[This one has a pipe (|) in it, but still shouldn't show up.

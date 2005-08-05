@@ -15,7 +15,10 @@ This is a long line ... tough!  You might not be able to see it all.  Don't do t
 
 [[testdir/Nest]]ing is cool.
 
-[[../This link]] shouldn't work, as it attempts to escape.
+[[../Link that shouldn't work]]You shouldn't see the link at the start of this line;
+it is an attempt to escape.
+
+[[../Another link|that shouldn't work]]You shouldn't see one here either.
 
 Lots of junk before the next link.
 
