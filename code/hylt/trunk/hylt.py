@@ -305,19 +305,25 @@ def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
    screen.addnstr (0, 0, note, screen_width - 1)
    screen.noutrefresh ()
 
+def displayBlinkingNote (screen, disp_string, x, count = 3, delay = 0.5):
+   """Displays a blinking note.
+   """
+
+   for i in range (count):
+      displayNote (screen, disp_string, x, curses.A_BOLD)
+      curses.doupdate ()
+      time.sleep (delay)
+      displayNote (screen, disp_string, x, curses.A_NORMAL)
+      curses.doupdate ()
+      time.sleep (delay)
+
 def noteMissingPage (screen, filename, x):
    """Displays a blinking message for when you attempt to navigate
    to a nonexistent Hylt page.
    """
    
-   print_str = "|" + filename + "| is missing.  Perhaps you should add it?"
-   for i in range (3):
-      displayNote (screen, print_str, x, curses.A_BOLD)
-      curses.doupdate ()
-      time.sleep (0.5)
-      displayNote (screen, print_str, x, curses.A_NORMAL)
-      curses.doupdate ()
-      time.sleep (0.5)
+   missing_str = "|" + filename + "| is missing.  Perhaps you should add it?"
+   displayBlinkingNote (screen, missing_str, x)
 
 def moveCursorForLink (core_state, direction):
    """When the selected link changes (usually due to an arrow
