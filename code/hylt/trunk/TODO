@@ -9,13 +9,6 @@ Core:
    * Tighter separation.  Many variables are stored in a "state"
      dictionary that gets passed around between functions.  This
      should probably be made less prevalent.
-   * Configuration file handling.  While there aren't many things
-     that need options now, one will be the location of the help
-     files--and perhaps there should be a "world help" file (the
-     sort that explains how you use the viewer) and a per-instance
-     help file (the sort that explains the purpose of a given Hylt
-     collection).  A location for storing HTML renders (per-user,
-     probably, not per-instance) would also be a good idea.
    * Command-line parsing.  Files passed in should be handled
      better.
    * However Curses is being used, it's making it flicker a lot,
