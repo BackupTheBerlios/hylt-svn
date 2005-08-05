@@ -53,6 +53,12 @@ SITE_CONFIG_FILE = "/etc/hylt.conf"
 # OPTION IS ADDED!
 
 CONFIG_CONTROL_DICT = {
+   "collection": {
+      "editable": {
+         "type": "boolean",
+         "default": True
+      }
+   },
    "pyui": {
       "blink_count": {
          "type": "integer",
@@ -528,7 +534,7 @@ def generateConfiguration (base_path):
             # default, as it's bum data.
 
             try:
-               opt_value = config_parser.getint (sect, opt)
+               opt_value = fetch_function (sect, opt)
             except:
                sys.stderr.write ("ERROR: Configuration file option " + opt + " in section " + sect + " is incorrectly set.  Using the default.  Please check your configuration.\n")
                opt_value = opt_dict["default"]
@@ -664,7 +670,8 @@ def hyltMain (meta_screen, starting_filename):
             main_needs_redraw = True
 
          elif ord ('e') == keypress:
-            if None != os.getenv ("EDITOR", None):
+            if (config["collection"]["editable"] and
+             None != os.getenv ("EDITOR", None)):
                rel_name = core_state["link_list"][core_state["selected_link"]]
                real_filename = os.path.join (base_path, rel_name)
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
@@ -677,7 +684,8 @@ def hyltMain (meta_screen, starting_filename):
                displayLinkInfo (bottom, core_state)
 
          elif ord ('E') == keypress:
-            if None != os.getenv ("EDITOR", None):
+            if (config["collection"]["editable"] and
+             None != os.getenv ("EDITOR", None)):
                real_filename = os.path.join (base_path, filename)
                os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
               
