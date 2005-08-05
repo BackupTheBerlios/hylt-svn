@@ -42,7 +42,24 @@ import os.path
 import sys
 import time
 
-SITE_CONFIGURATION = "/etc/hylt.conf"
+# SITE_CONFIG_FILE: The location of the overall site configuration file.  A
+# Hylt installer should put a default config here, stating any special help
+# file location, etc.
+
+SITE_CONFIG_FILE = "/etc/hylt.conf"
+
+# CONFIG_CONTROL_DICT: This dictionary holds the default types and values
+# for configuration options.  REMEMBER TO UPDATE THIS EVERY TIME A CONFIG
+# OPTION IS ADDED!
+
+CONFIG_CONTROL_DICT = {
+   "behavior": {
+      "blink_count": {
+         "type": "integer",
+         "default": 3
+      }
+   }
+}
 
 def generateTitle (filename):
    """Generates the title for a given Hylt page.  This typically entails
@@ -458,6 +475,69 @@ def safePath (path, base_path):
 
    return to_return
 
+def generateConfiguration (base_path):
+   """Generate a configuration for a given instance of Hylt.  There
+   are multiple config file locations that we need to read from,
+   and various default values that must be set if not present in
+   the config files.
+   """
+
+   config_file_list = [
+      SITE_CONFIG_FILE,
+      os.path.expanduser ("~/.hylt.conf"),
+      os.path.join (base_path, "hylt.conf")
+   ]
+
+   config_parser = ConfigParser.ConfigParser ()
+   config_parser.read (config_file_list)
+
+   # Since every possible configuration option is in CONFIG_CONTROL_DICT,
+   # we use that as the source for the real config; that way bogus
+   # configuration options don't throw us off.  (We try to be helpful,
+   # honest.)
+   real_config = {}
+
+   for sect, sect_dict in CONFIG_CONTROL_DICT.items():
+      real_config[sect] = {}
+      for opt, opt_dict in sect_dict.items():
+
+         # Okay.  At the moment, there are two elements in every entry:
+         # - "type": "string", "int", "bool"
+         # - "default": a default value for the element.
+
+         # First, make sure it even has a value for this; if not, just
+         # use the default.
+         if not config_parser.has_option (sect, opt):
+            
+            # There's no value; just use the default.
+            real_config[sect][opt] = opt_dict["default"]
+
+         else:
+            
+            # Okay, there's a value.  Determine what function we're
+            # going to use to fetch the value.
+            if "integer" == opt_dict["type"]:
+               fetch_function = config_parser.getint
+            elif "boolean" == opt_dict["type"]:
+               fetch_function = config_parser.getboolean
+            else: # "string" == opt_dict["type"]
+               fetch_function = config_parser.get
+
+            # Now that we have a function handle, use it in a try/except
+            # block.  If there's any exception, set the value to the
+            # default, as it's bum data.
+
+            try:
+               opt_value = config_parser.getint (sect, opt)
+            except:
+               sys.stderr.write ("ERROR: Configuration file option " + opt + " in section " + sect + " is incorrectly set.  Using the default.  Please check your configuration.\n")
+               opt_value = opt_dict["default"]
+                  
+            real_config[sect][opt] = opt_value
+
+   # Done generating the configuration!  Return it.
+   return real_config
+
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
@@ -481,14 +561,8 @@ def hyltMain (meta_screen, starting_filename):
    main = meta_screen.subwin (meta_y - 2, meta_x, 1, 0)
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
 
-   # Parse the config file(s) and set parameter values
-   configuration = ConfigParser.ConfigParser ()
-   configuration.read ([SITE_CONFIGURATION, os.path.expanduser ("~/.hylt.conf"), os.path.join (core_state["base_path"], "hylt.conf")])
-   if configuration.has_option("behavior","blink_count"):
-      core_state["blink_count"] = configuration.getint("behavior","blink_count")
-   else:
-      core_state["blink_count"] = 3
-
+   # Read in the configuration.
+   config = core_state["config"] = generateConfiguration (base_path)
    core_state["history"] = []
 
    fresh_page = True
@@ -627,7 +701,8 @@ def hyltMain (meta_screen, starting_filename):
                filename = rel_path
                fresh_page = True
             else:
-               noteMissingPage (bottom, rel_path, core_state["x"], core_state["blink_count"])
+               noteMissingPage (bottom, rel_path, core_state["x"],
+                config["behavior"]["blink_count"])
                displayLinkInfo (bottom, core_state)
                
 
