@@ -273,6 +273,22 @@ def displayPage (screen, core_state):
    # Mark the screen as needing refresh.
    screen.noutrefresh ()
 
+def debugPrintPage (data_array):
+   """Prints a debug version of a page to stderr.
+   """
+
+   sys.stderr.write ("\nPage:\n")
+   for row in data_array:
+      char_string = ""
+      link_string = ""
+      for char, link in row:
+         char_string += char
+         if None == link:
+            link_string += " "
+         else:
+            link_string += chr (ord ('a') + link)
+      sys.stderr.write (char_string + "\n" + link_string + "\n")
+   
 def displayHeader (screen, core_state):
    """Displays the header for the Hylt page.
    """
@@ -406,7 +422,6 @@ def safePath (path, base_path):
    to_return = None
    
    attempted_path = os.path.normpath (os.path.join (base_path, path))
-   sys.stderr.write ("\n|" + base_path + "| + |" + path + "| = |" + attempted_path + "|")
 
    # Once it's normalized in the above line, the base path better
    # be the first part of the path.
@@ -465,8 +480,8 @@ def hyltMain (meta_screen, starting_filename):
 
          curr_base_path = os.path.dirname (filename)
 
-         sys.stderr.write ("Loading |" + filename + "|")
          readHyltFile (filename, core_state) 
+#        debugPrintPage (core_state["data_array"])
 
          core_state["title"] = generateTitle (filename)
          core_state["cx"] = 0
@@ -578,7 +593,6 @@ def hyltMain (meta_screen, starting_filename):
             # base path to the link and then test that against the "real"
             # base path.
             attempted_path = os.path.join (curr_base_path, rel_name)
-            sys.stderr.write ("\nAttempted path: |" + attempted_path + "|")
             ret_filename = safePath (attempted_path, base_path)
             # safePath returns None if the path was an attempt to escape.
             if None == ret_filename:
