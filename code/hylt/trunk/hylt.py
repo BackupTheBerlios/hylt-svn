@@ -555,6 +555,12 @@ def hyltMain (meta_screen, starting_filename):
       elif curses.KEY_PPAGE == keypress:
          core_state["cy"] -= meta_y - 4
          main_needs_redraw = True
+      elif ord('[') == keypress:
+         core_state["cx"] -= meta_x - 4
+         main_needs_redraw = True
+      elif ord(']') == keypress:
+         core_state["cx"] += meta_x - 4
+         main_needs_redraw = True
       elif ord ('r') == keypress:
          fresh_page = True
 
