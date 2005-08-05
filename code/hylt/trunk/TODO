@@ -18,6 +18,10 @@ Core:
      probably, not per-instance) would also be a good idea.
    * Command-line parsing.  Files passed in should be handled
      better.
+   * However Curses is being used, it's making it flicker a lot,
+     especially on remote sessions.  I think there's entirely too
+     much redrawing going on.  This needs to be made more efficient,
+     so it's not as ugly.
 
 Documentation:
    * The Hylt format needs to be documented.  It's not complex, but
