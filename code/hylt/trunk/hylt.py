@@ -197,7 +197,7 @@ def readHyltFile (filename, core_state):
             else:
                curr_state = "link_filename"
                link_filename += ']'
-               link_text += char
+               link_filename += char
          elif curr_state == "pretty_link":
             if (']' == char):
                curr_state = "firstclosebracket_pretty"
