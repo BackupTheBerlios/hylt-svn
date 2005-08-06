@@ -31,10 +31,3 @@ Exporting:
 
 UI:
    * Online help, implented as Hylt pages, of course! (jwvernon)
-   * The ability to move forward in history, instead of following the
-     current link. (mandos)
-   * Search functionality.  Given a particular name, find files that
-     match the search string. (mandos)
-   * Search-to-history.  Given a completed search, put the results in
-     the forward-history buffer, allowing the user to bounce between
-     the pages. (mandos)
