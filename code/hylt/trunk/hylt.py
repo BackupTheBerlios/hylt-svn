@@ -640,7 +640,7 @@ def historyMove (core_state, step):
 
    old_pos = core_state["history_position"]
    core_state["history_position"] = max (0, min (old_pos + step, 
-    len (core_state["history"]) - 1)
+    len (core_state["history"]) - 1))
    if (core_state["history_position"] != old_pos and
     core_state["history_position"] >= 0):
       return core_state["history_position"] - old_pos
