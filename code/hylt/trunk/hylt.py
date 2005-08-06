@@ -493,8 +493,8 @@ def safePath (path):
 
    # Once it's normalized in the above line, the path should not
    # start with either '..' or '/', both attempts to escape.
-   if not (attempted_path.startswith("..") or
-    attempted_path.startswith("/")):
+   if not (attempted_path.startswith ("..") or
+    attempted_path.startswith ("/")):
       to_return = path
 
    return to_return
@@ -504,18 +504,18 @@ def regexpSearchDirtree (path, expression):
    expression and is a Hylt file.
    """
 
-   regexp = re.compile(expression, re.IGNORECASE)
+   regexp = re.compile (expression, re.IGNORECASE)
    matches = []
-   for root, dirs, files in os.walk(path, 1):
+   for root, dirs, files in os.walk (path):
       for file in files:
-         current = os.path.join(root, file)
+         current = os.path.join (root, file)
 
          # There are two criteria for adding a found file to our list:
          # - It must match the search (obviously); and
          # - It must end in .hylt.  We don't want spurious results.
-         if (regexp.search(current) and len (current) > 5 and
+         if (regexp.search (current) and len (current) > 5 and
           ".hylt" == current[-5:]):
-            matches.append(current)
+            matches.append (current)
    return matches
 
 def smartGo (screen, core_state):
@@ -525,14 +525,14 @@ def smartGo (screen, core_state):
    """
 
    prompt = "Go to: "
-   displayNote(screen, prompt, core_state["x"] - 1)
-   curses.curs_set(1)
-   curses.echo()
-   expression = screen.getstr(0, len(prompt))
-   curses.noecho()
-   curses.curs_set(0)
-   displayNote(screen, "Searching for: " + expression, core_state["x"] - 1)
-   return regexpSearchDirtree(".", expression)
+   displayNote (screen, prompt, core_state["x"] - 1)
+   curses.curs_set (1)
+   curses.echo ()
+   expression = screen.getstr (0, len (prompt))
+   curses.noecho ()
+   curses.curs_set (0)
+   displayNote (screen, "Searching for: " + expression, core_state["x"] - 1)
+   return regexpSearchDirtree (".", expression)
 
 def generateConfiguration ():
    """Generate a configuration for a given instance of Hylt.  There
@@ -615,7 +615,7 @@ def historyCut (core_state):
    #
    # which makes the slice just [:].  Very clever.
    core_state["history"] = core_state["history"][:core_state["history_position"] + 1]
-   return len(core_state["history"])
+   return len (core_state["history"])
 
 def historyAdd (core_state, filename):
    """Add a page to the history. It's new file so there is no knowledge
@@ -630,7 +630,7 @@ def historyAdd (core_state, filename):
       "selected_link": 0
    }
    core_state["history"].append (history_dict)
-   return len(core_state["history"])
+   return len (core_state["history"])
 
 def historyMove (core_state, step):
    """ Load a page from the forward (positive step) or backward (negative
@@ -639,8 +639,10 @@ def historyMove (core_state, step):
    """
 
    old_pos = core_state["history_position"]
-   core_state["history_position"] = max(0, min(len(core_state["history"]) - 1, old_pos + step))
-   if core_state["history_position"] != old_pos and core_state["history_position"] >= 0:
+   core_state["history_position"] = max (0, min (old_pos + step, 
+    len (core_state["history"]) - 1)
+   if (core_state["history_position"] != old_pos and
+    core_state["history_position"] >= 0):
       return core_state["history_position"] - old_pos
    else:
       return 0
