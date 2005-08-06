@@ -474,6 +474,8 @@ def safePath (path):
    return to_return
 
 def regexpSearchDirtree (path, expression):
+   """ Return all pathnames beginning with path that match supplied case-insensitive regular expression.
+   """
    regexp = re.compile(expression, re.IGNORECASE)
    matches = []
    for root, dirs, files in os.walk(path, 1):
@@ -484,6 +486,8 @@ def regexpSearchDirtree (path, expression):
    return matches
 
 def smartGo (screen, core_state):
+   """ Display 'go to' prompt on the specified screen, pass entered expression to directory tree search function and return its results.
+   """
    prompt = "Go to: "
    displayNote(screen, prompt, core_state["x"] - 1)
    curses.curs_set(1)
