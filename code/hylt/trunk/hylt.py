@@ -561,6 +561,17 @@ def generateConfiguration ():
    # Done generating the configuration!  Return it.
    return real_config
 
+def historyMove (core_state, step):
+   """ Loads pages from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
+   """
+   old_pos = core_state["history_position"]
+   core_state["history_position"] = min(0, max(len(core_state["history"]) - 1, core_state["history_position"] + step))
+   if core_state["history_position"] != old_pos and core_state["history_position"] >= 0:
+      core_state["current"] = core_state["history"][core_state["history_position"]]
+      return core_state["history_position"] - old_pos
+   else:
+      return 0
+
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
