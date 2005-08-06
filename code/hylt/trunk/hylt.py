@@ -19,7 +19,7 @@
 #
 # (The license can be found in LICENSE.)
 
-"""hylt v0.1.0
+"""hylt v0.1.1-dev
 
 Hylt is a text-based mini-Wiki, or something approaching that.  While
 technically there is a separation between the file format and the
@@ -90,13 +90,10 @@ def generateTitle (filename):
 
    return to_return
 
-def exportToHTML (filename, core_state):
+def exportToHTML (filename, data_array, link_list):
    """Exports a given filename to an XHTML document.  The document
       is stored in the same location as the original file.
    """
-   
-   data_array = core_state["data_array"]
-   link_list = core_state["link_list"]
    
    file = open (filename, "w")
 
@@ -636,8 +633,10 @@ def hyltMain (meta_screen, starting_filename):
          core_state["cx"] += min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('x') == keypress:
-	 exportToHTML (filename[:-4] + "html", core_state)
-	 displayNote (bottom, "Exported to '" + filename[:-4] + "html' ...", core_state)
+         exportToHTML (filename[:-4] + "html", core_state["data_array"],
+          core_state["link_list"])
+         displayNote (bottom, "Exported to '" + filename[:-4] + "html' ...",
+          core_state["x"])
       elif curses.KEY_NPAGE == keypress:
          core_state["cy"] += meta_y - 4
          main_needs_redraw = True
