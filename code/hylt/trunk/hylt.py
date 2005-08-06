@@ -591,6 +591,8 @@ def hyltMain (meta_screen, starting_filename):
 
    main_needs_redraw = True
 
+   curr_loc_info = None
+
    while not done:
       if fresh_page:
 
@@ -600,12 +602,27 @@ def hyltMain (meta_screen, starting_filename):
 #        debugPrintPage (core_state["data_array"])
 
          core_state["title"] = generateTitle (filename)
-         core_state["cx"] = 0
-         core_state["cy"] = 0
-         if core_state["link_count"] > 0:
-            core_state["selected_link"] = 0
+
+         # Only reset the cursor and selected link if we don't have this
+         # information elsewhere (from history, say.)
+         if (None == curr_loc_info):
+            core_state["cx"] = 0
+            core_state["cy"] = 0
+            if core_state["link_count"] > 0:
+               core_state["selected_link"] = 0
+            else:
+               core_state["selected_link"] = None
          else:
-            core_state["selected_link"] = None
+            core_state["cx"] = curr_loc_info["cx"]
+            core_state["cy"] = curr_loc_info["cy"]
+
+            # Someone may have edited the page since we last loaded it, and
+            # removed all the links.  This is a hell of an edge case, but
+            # why risk it?
+            if core_state["link_count"] > 0:
+               core_state["selected_link"] = curr_loc_info["selected_link"]
+            else:
+               core_state["selected_link"] = None
      
          dir_delta = 1
          fresh_page = False
@@ -664,8 +681,9 @@ def hyltMain (meta_screen, starting_filename):
          
       elif curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress:
          if len (core_state["history"]) > 0:
-            filename = core_state["history"][-1]
-            core_state["history"].pop ()
+
+            curr_loc_info = core_state["history"].pop ()
+            filename = curr_loc_info["filename"]
             fresh_page = True
 
       # Don't even bother with arrow keys other than back unless link count > 0.
@@ -717,6 +735,7 @@ def hyltMain (meta_screen, starting_filename):
                curses.curs_set(1)
                curses.curs_set(0)
                fresh_page = True
+               curr_loc_info = None
 
          elif curses.KEY_RIGHT == keypress or 10 == keypress or curses.KEY_ENTER == keypress:
          
@@ -728,9 +747,16 @@ def hyltMain (meta_screen, starting_filename):
             if os.path.isfile (real_path):
             
                # Go!  Add this page to the history so we can come back.
-               core_state["history"].append (filename)
+               core_state["history"].append (
+               {
+                  "filename": filename,
+                  "cx": core_state["cx"],
+                  "cy": core_state["cy"],
+                  "selected_link": core_state["selected_link"]
+               })
                filename = real_path
                fresh_page = True
+               curr_loc_info = None
             else:
                noteMissingPage (bottom, real_path, core_state["x"],
                 config["pyui"]["blink_count"])
