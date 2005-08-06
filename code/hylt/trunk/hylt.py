@@ -164,6 +164,7 @@ def readHyltFile (filename, core_state):
    link_count = 0
    link_list = []
    max_width = 0
+   has_data = False
    for line in file:
       
       new_array_line = []
@@ -175,6 +176,7 @@ def readHyltFile (filename, core_state):
                curr_state = "textescape"
             else:
                new_array_line.append ((char, None))
+               has_data = True
          elif curr_state == "textescape":
             new_array_line.append ((char, None))
             curr_state = "text"
@@ -230,6 +232,7 @@ def readHyltFile (filename, core_state):
                      else:
                         new_array_line.append ((link_char, link_count))
                   link_count += 1
+                  has_data = True
 
                # else do nothing; this wasn't a valid link.
             else:
@@ -259,6 +262,7 @@ def readHyltFile (filename, core_state):
                   for link_char in link_text:
                      new_array_line.append ((link_char, link_count))
                   link_count += 1
+                  has_data = True
             else:
                curr_state = "pretty_link"
                link_text += ']'
@@ -270,7 +274,14 @@ def readHyltFile (filename, core_state):
       data_array.append (new_array_line)
       if len (new_array_line) > max_width:
          max_width = len (new_array_line)
-   
+  
+   # Now, if we were sent to an empty file, data_array will be completely
+   # empty.  We don't want that; instead, populate it with a single blank
+   # space and no link.
+
+   if not has_data:
+      data_array = [[(' ', None)]]
+
    # Done.  Add the data array and link list to the state.
    core_state["data_array"] = data_array
    core_state["link_list"] = link_list
