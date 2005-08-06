@@ -577,7 +577,7 @@ def historyAdd (core_state, filename = None):
          "filename": core_state["filename"],
          "cx": core_state[cx],
          "cy": core_state[cy],
-         "selected_link" = core_state["selected_link"]
+         "selected_link": core_state["selected_link"]
       }
 
       history_position = core_state["history_position"]
@@ -598,7 +598,7 @@ def historyAdd (core_state, filename = None):
          "filename": filename,
          "cx": 0,
          "cy": 0,
-         "selected_link" = 0
+         "selected_link": 0
       }
       core_state["history"].append (history_dict)
 
@@ -606,9 +606,8 @@ def historyMove (core_state, step):
    """ Loads pages from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
    """
    old_pos = core_state["history_position"]
-   core_state["history_position"] = min(0, max(len(core_state["history"]) - 1, core_state["history_position"] + step))
+   core_state["history_position"] = min(0, max(len(core_state["history"]) - 1, old_pos + step))
    if core_state["history_position"] != old_pos and core_state["history_position"] >= 0:
-      core_state["current"] = core_state["history"][core_state["history_position"]]
       return core_state["history_position"] - old_pos
    else:
       return 0
@@ -627,7 +626,6 @@ def hyltMain (meta_screen, starting_filename):
 
    # Change to the base path.
    os.chdir (os.path.dirname (starting_filename))
-   filename = core_state["filename"] = os.path.basename (starting_filename)
    core_state["curr_base_path"] = ""
    
 
@@ -639,7 +637,19 @@ def hyltMain (meta_screen, starting_filename):
 
    # Read in the configuration.
    config = core_state["config"] = generateConfiguration ()
-   core_state["history"] = []
+
+   # Okay.  History's actually a bad name for this right now, but it'll have
+   # to do.  This is a list of pages; it normally tracks history, but can
+   # also track search results.  At the beginning, the only element in the
+   # history is the starting page; others will be added, subtracted, etc.
+   current_loc = {
+      "filename": os.path.basename (starting_filename),
+      "cx": 0,
+      "cy": 0,
+      "selected_link": 0
+   }
+   core_state["history"] = [current_loc]
+   core_state["history_position"] = 0
 
    fresh_page = True
    done = False
@@ -648,48 +658,37 @@ def hyltMain (meta_screen, starting_filename):
 
    main_needs_redraw = True
 
-   curr_loc_info = None
-
    while not done:
       if fresh_page:
-
          core_state["curr_base_path"] = os.path.dirname (filename)
 
-         readHyltFile (filename, core_state) 
+         current_loc = core_state["history"][core_state["history_position"]]
+
+         readHyltFile (current_loc["filename"], core_state) 
 #        debugPrintPage (core_state["data_array"])
 
          core_state["title"] = generateTitle (filename)
 
-         # Only reset the cursor and selected link if we don't have this
-         # information elsewhere (from history, say.)
-         if (None == curr_loc_info):
-            core_state["cx"] = 0
-            core_state["cy"] = 0
-            if core_state["link_count"] > 0:
-               core_state["selected_link"] = 0
+         core_state["cx"] = current_loc["cx"]
+         core_state["cy"] = current_loc["cy"]
+
+         # Links can be removed between page loads, and the history
+         # jumper defaults to link 0, which doesn't exist on a page
+         # with no links.  In either case, we're safe if we just
+         # change the link count to something more appropriate.
+         if core_state["link_count"] > 0:
+            potential_link = current_loc["selected_link"]
+            if core_state["link_count"] > potential_link:
+               core_state["selected_link"] = potential_link
             else:
-               core_state["selected_link"] = None
+
+               # There are links, but the one we've selected is past them.
+               # Default to the very last link.
+               core_state["selected_link"] = core_state["link_count"] - 1
          else:
-            core_state["cx"] = curr_loc_info["cx"]
-            core_state["cy"] = curr_loc_info["cy"]
 
-            # Links can be removed between page loads, and the history
-            # jumper defaults to link 0, which doesn't exist on a page
-            # with no links.  In either case, we're safe if we just
-            # change the link count to something more appropriate.
-            if core_state["link_count"] > 0:
-               potential_link = curr_loc_info["selected_link"]
-               if core_state["link_count"] > potential_link:
-                  core_state["selected_link"] = potential_link
-               else:
-
-                  # There are links, but the one we've selected is past them.
-                  # Default to the very last link.
-                  core_state["selected_link"] = core_state["link_count"] - 1
-            else:
-
-               # No links on the page.
-               core_state["selected_link"] = None
+            # No links on the page.
+            core_state["selected_link"] = None
      
          dir_delta = 1
          fresh_page = False
@@ -717,10 +716,10 @@ def hyltMain (meta_screen, starting_filename):
          core_state["cx"] += min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('x') == keypress:
-         exportToHTML (filename[:-4] + "html", core_state["data_array"],
-          core_state["link_list"])
-         displayNote (bottom, "Exported to '" + filename[:-4] + "html' ...",
-          core_state["x"])
+         exportToHTML (current_loc["filename"][:-4] + "html",
+          core_state["data_array"], core_state["link_list"])
+         displayNote (bottom, "Exported to '" + current_loc["filename"][:-4]
+          + "html' ...", core_state["x"])
       elif curses.KEY_NPAGE == keypress:
          core_state["cy"] += meta_y - 4
          main_needs_redraw = True
@@ -740,23 +739,15 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('g') == keypress:
          result = smartGo(bottom, core_state)
          if len(result):
-            core_state["history"].append ({
-            {
-               "filename": filename,
-               "cx": core_state["cx"],
-               "cy": core_state["cy"],
-               "selected_link": core_state["selected_link"]
-            })
-            filename = core_state["filename"] = result[0]
+            for page in result:
+               historyAdd (coreState, page)
+            historyMove (core_state, 1)
             fresh_page = True
          else:
             displayNote(bottom, "No matching files found", core_state["x"] - 1)
          
       elif curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress:
-         if len (core_state["history"]) > 0:
-
-            curr_loc_info = core_state["history"].pop ()
-            filename = core_state["filename"] = curr_loc_info["filename"]
+         if historyMove (core_state, -1):
             fresh_page = True
 
       # Don't even bother with arrow keys other than back unless link count > 0.
@@ -802,7 +793,8 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('e') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
-               os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
+               os.system (os.getenv ("EDITOR") + " \"" +
+                current_loc["filename"] + "\"")
               
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -818,18 +810,10 @@ def hyltMain (meta_screen, starting_filename):
             real_path = os.path.normpath (os.path.join (
              core_state["curr_base_path"], rel_name))
             if os.path.isfile (real_path):
-            
-               # Go!  Add this page to the history so we can come back.
-               core_state["history"].append (
-               {
-                  "filename": filename,
-                  "cx": core_state["cx"],
-                  "cy": core_state["cy"],
-                  "selected_link": core_state["selected_link"]
-               })
-               filename = core_state["filename"] = real_path
+               historyAdd (core_state)
+               historyAdd (core_state, real_path)
+               historyMove (core_state, 1)
                fresh_page = True
-               curr_loc_info = None
             else:
                noteMissingPage (bottom, real_path, core_state["x"],
                 config["pyui"]["blink_count"])
