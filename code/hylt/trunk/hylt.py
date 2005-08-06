@@ -660,11 +660,13 @@ def hyltMain (meta_screen, starting_filename):
 
    while not done:
       if fresh_page:
-         core_state["curr_base_path"] = os.path.dirname (filename)
 
          current_loc = core_state["history"][core_state["history_position"]]
 
-         readHyltFile (current_loc["filename"], core_state) 
+         filename = current_loc["filename"]
+         core_state["curr_base_path"] = os.path.dirname (filename)
+
+         readHyltFile (filename, core_state) 
 #        debugPrintPage (core_state["data_array"])
 
          core_state["title"] = generateTitle (filename)
@@ -716,9 +718,9 @@ def hyltMain (meta_screen, starting_filename):
          core_state["cx"] += min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('x') == keypress:
-         exportToHTML (current_loc["filename"][:-4] + "html",
+         exportToHTML (filename[:-4] + "html",
           core_state["data_array"], core_state["link_list"])
-         displayNote (bottom, "Exported to '" + current_loc["filename"][:-4]
+         displayNote (bottom, "Exported to '" + filename[:-4]
           + "html' ...", core_state["x"])
       elif curses.KEY_NPAGE == keypress:
          core_state["cy"] += meta_y - 4
@@ -793,8 +795,7 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('e') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
-               os.system (os.getenv ("EDITOR") + " \"" +
-                current_loc["filename"] + "\"")
+               os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
               
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -810,7 +811,6 @@ def hyltMain (meta_screen, starting_filename):
             real_path = os.path.normpath (os.path.join (
              core_state["curr_base_path"], rel_name))
             if os.path.isfile (real_path):
-               historyAdd (core_state)
                historyAdd (core_state, real_path)
                historyMove (core_state, 1)
                fresh_page = True
