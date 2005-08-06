@@ -285,14 +285,16 @@ def displayPage (screen, core_state):
    of the screen), and so on.
    """
 
-   screen.clear ()
-   
+   if core_state["history_position"] < 0:
+      return
+
    # Print everything we can fit starting where the cursor is.
+   screen.clear ()
    display_y = 0
-   cy = core_state["cy"]
-   cx = core_state["cx"]
+   cy = core_state["history"][core_state["history_position"]]["cy"]
+   cx = core_state["history"][core_state["history_position"]]["cx"]
    data_array = core_state["data_array"]
-   selected_link = core_state["selected_link"]
+   selected_link = core_state["history"][core_state["history_position"]]["selected_link"]
    for row_num in range (cy, min (len (data_array), cy + core_state["y"] - 2)):
       display_x = 0
       curr_row = data_array[row_num]
@@ -350,7 +352,10 @@ def displayLinkInfo (screen, core_state):
    appropriate message.
    """
    
-   link_num = core_state["selected_link"]
+   if core_state["history_position"] < 0:
+      return
+
+   link_num = core_state["history"][core_state["history_position"]]["selected_link"]
    link_list = core_state["link_list"]
    if None != link_num:
       displayNote (screen, link_list[link_num], core_state["x"])
@@ -370,7 +375,7 @@ def displayNote (screen, note, screen_width, attribute = curses.A_REVERSE):
    screen.addnstr (0, 0, note, screen_width - 1)
    screen.noutrefresh ()
 
-def displayBlinkingNote (screen, disp_string, x, count = 3, delay = 0.5):
+def displayBlinkingNote (screen, disp_string, x, count = 1, delay = 0.5):
    """Displays a blinking note.
    """
 
@@ -398,6 +403,9 @@ def moveCursorForLink (core_state, direction):
    appears near the top of the page, etc.
    """
 
+   if core_state["history_position"] < 0:
+      return
+
    data_array = core_state["data_array"]
 
    if direction > 0:
@@ -410,7 +418,7 @@ def moveCursorForLink (core_state, direction):
    done = False
    while not done:
       for char, link in curr_line:
-         if link == core_state["selected_link"]:
+         if link == core_state["history"][core_state["history_position"]]["selected_link"]:
             done = True
             link_y = loc
       if not done:
@@ -425,14 +433,14 @@ def moveCursorForLink (core_state, direction):
 
    # Okay, we have the link's y location.  If it's on the current page, don't
    # move; otherwise, do the minimal movement that gets us there.
-   curr_top = core_state["cy"]
+   curr_top = core_state["history"][core_state["history_position"]]["cy"]
    curr_bottom = curr_top + core_state["y"] - 3
    if link_y < curr_top:
       distance = curr_top - link_y
-      core_state["cy"] -= distance + 1
+      core_state["history"][core_state["history_position"]]["cy"] -= distance + 1
    elif link_y > curr_bottom:
       distance = link_y - curr_bottom
-      core_state["cy"] += distance + 1
+      core_state["history"][core_state["history_position"]]["cy"] += distance + 1
       
    # else do nothing; it's on this page.
 
@@ -443,14 +451,17 @@ def fixCursorCoords (core_state):
    screen display can fix them up.
    """
    
-   if 0 > core_state["cx"]:
-      core_state["cx"] = 0
-   elif core_state["cx"] > core_state["mx"] - 1:
-      core_state["cx"] = core_state["mx"] - 1
-   if 0 > core_state["cy"]:
-      core_state["cy"] = 0
-   elif core_state["cy"] > core_state["my"] - 1:
-      core_state["cy"] = core_state["my"] - 1
+   if core_state["history_position"] < 0:
+      return
+
+   if 0 > core_state["history"][core_state["history_position"]]["cx"]:
+      core_state["history"][core_state["history_position"]]["cx"] = 0
+   elif core_state["history"][core_state["history_position"]]["cx"] > core_state["mx"] - 1:
+      core_state["history"][core_state["history_position"]]["cx"] = core_state["mx"] - 1
+   if 0 > core_state["history"][core_state["history_position"]]["cy"]:
+      core_state["history"][core_state["history_position"]]["cy"] = 0
+   elif core_state["history"][core_state["history_position"]]["cy"] > core_state["my"] - 1:
+      core_state["history"][core_state["history_position"]]["cy"] = core_state["my"] - 1
 
 def safePath (path):
    """Check the attempted path to make sure that it doesn't
@@ -561,17 +572,25 @@ def generateConfiguration ():
    # Done generating the configuration!  Return it.
    return real_config
 
-def historyAdd (core_state, filename):
-   """Add a page to the history.  If there's a filename, it's assumed to be
-   from some external source (a search result), and as such has no default
-   knowledge of locations on the page, etc.  If there is no filename, it's
-   a snapshot of the current page, and saves that data.
+def historyCut (core_state):
+   """ Remove all forward history (from current position)
    """
 
-   # Populate the history object and place it in the history stream.  If
-   # we were passed a filename, we just append it to the history list; if
-   # we weren't passed a filename, we replace the list from this point on
-   # with this entry.
+   # We have to remove everything past the history_position, as
+   # selecting a link kills history.
+   #
+   #   len (history) = history_postion - 1
+   #
+   # which makes the slice just [:].  Very clever.
+   core_state["history"] = core_state["history"][:core_state["history_position"] + 1]
+   return len(core_state["history"])
+
+def historyAdd (core_state, filename):
+   """Add a page to the history. It's new file so there is no knowledge
+   of locations on the page, etc.
+   """
+
+   # Populate the history object and append it to the history stream.
    history_dict = {
       "filename": filename,
       "cx": 0,
@@ -579,9 +598,10 @@ def historyAdd (core_state, filename):
       "selected_link": 0
    }
    core_state["history"].append (history_dict)
+   return len(core_state["history"])
 
 def historyMove (core_state, step):
-   """ Loads pages from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
+   """ Load page from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
    """
    old_pos = core_state["history_position"]
    core_state["history_position"] = max(0, min(len(core_state["history"]) - 1, old_pos + step))
@@ -620,13 +640,8 @@ def hyltMain (meta_screen, starting_filename):
    # to do.  This is a list of pages; it normally tracks history, but can
    # also track search results.  At the beginning, the only element in the
    # history is the starting page; others will be added, subtracted, etc.
-   current_loc = {
-      "filename": os.path.basename (starting_filename),
-      "cx": 0,
-      "cy": 0,
-      "selected_link": 0
-   }
-   core_state["history"] = [current_loc]
+   core_state["history"] = []
+   historyAdd(core_state, os.path.basename (starting_filename))
    core_state["history_position"] = 0
 
    fresh_page = True
@@ -637,9 +652,8 @@ def hyltMain (meta_screen, starting_filename):
    main_needs_redraw = True
 
    while not done:
+      current_loc = core_state["history"][core_state["history_position"]]
       if fresh_page:
-
-         current_loc = core_state["history"][core_state["history_position"]]
 
          filename = current_loc["filename"]
          core_state["curr_base_path"] = os.path.dirname (filename)
@@ -649,26 +663,13 @@ def hyltMain (meta_screen, starting_filename):
 
          core_state["title"] = generateTitle (filename)
 
-         core_state["cx"] = current_loc["cx"]
-         core_state["cy"] = current_loc["cy"]
-
          # Links can be removed between page loads, and the history
          # jumper defaults to link 0, which doesn't exist on a page
          # with no links.  In either case, we're safe if we just
          # change the link count to something more appropriate.
-         if core_state["link_count"] > 0:
-            potential_link = current_loc["selected_link"]
-            if core_state["link_count"] > potential_link:
-               core_state["selected_link"] = potential_link
-            else:
-
-               # There are links, but the one we've selected is past them.
-               # Default to the very last link.
-               core_state["selected_link"] = core_state["link_count"] - 1
-         else:
-
-            # No links on the page.
-            core_state["selected_link"] = None
+         current_loc["selected_link"] = min(current_loc["selected_link"], core_state["link_count"] - 1)
+         if current_loc["selected_link"] == -1:
+            current_loc["selected_link"] = None
      
          dir_delta = 1
          fresh_page = False
@@ -684,16 +685,16 @@ def hyltMain (meta_screen, starting_filename):
       if ord ('q') == keypress:
          done = True
       elif ord ('h') == keypress:
-         core_state["cx"] -= min (max (1, meta_x / 2), 8)
+         current_loc["cx"] -= min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('j') == keypress:
-         core_state["cy"] += min (max (1, meta_x / 2), 8)
+         current_loc["cy"] += min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('k') == keypress:
-         core_state["cy"] -= min (max (1, meta_x / 2), 8)
+         current_loc["cy"] -= min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('l') == keypress:
-         core_state["cx"] += min (max (1, meta_x / 2), 8)
+         current_loc["cx"] += min (max (1, meta_x / 2), 8)
          main_needs_redraw = True
       elif ord ('x') == keypress:
          exportToHTML (filename[:-4] + "html",
@@ -701,16 +702,16 @@ def hyltMain (meta_screen, starting_filename):
          displayNote (bottom, "Exported to '" + filename[:-4]
           + "html' ...", core_state["x"])
       elif curses.KEY_NPAGE == keypress:
-         core_state["cy"] += meta_y - 4
+         current_loc["cy"] += meta_y - 4
          main_needs_redraw = True
       elif curses.KEY_PPAGE == keypress:
-         core_state["cy"] -= meta_y - 4
+         current_loc["cy"] -= meta_y - 4
          main_needs_redraw = True
-      elif ord('[') == keypress:
-         core_state["cx"] -= meta_x - 4
+      elif ord ('[') == keypress:
+         current_loc["cx"] -= meta_x - 4
          main_needs_redraw = True
-      elif ord(']') == keypress:
-         core_state["cx"] += meta_x - 4
+      elif ord (']') == keypress:
+         current_loc["cx"] += meta_x - 4
          main_needs_redraw = True
       elif ord ('r') == keypress:
          fresh_page = True
@@ -719,8 +720,9 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('g') == keypress:
          result = smartGo(bottom, core_state)
          if len(result):
+            historyCut (core_state)
             for page in result:
-               historyAdd (coreState, page)
+               historyAdd (core_state, page)
             historyMove (core_state, 1)
             fresh_page = True
          else:
@@ -730,24 +732,28 @@ def hyltMain (meta_screen, starting_filename):
          if historyMove (core_state, -1):
             fresh_page = True
 
+      elif curses.KEY_RIGHT == keypress:
+         if historyMove (core_state, 1):
+            fresh_page = True
+
       # Don't even bother with arrow keys other than back unless link count > 0.
       elif core_state["link_count"] > 0:
          if curses.KEY_UP == keypress:
-            if core_state["selected_link"] == 0:
-               core_state["cy"] -= min (max (1, meta_x / 2), 8)
+            if current_loc["selected_link"] == 0:
+               current_loc["cy"] -= min (max (1, meta_x / 2), 8)
                dir_delta = -1
             else:
-               core_state["selected_link"] -= 1
+               current_loc["selected_link"] -= 1
                moveCursorForLink (core_state, -1)
                displayLinkInfo (bottom, core_state)
             main_needs_redraw = True
 
          elif curses.KEY_DOWN == keypress:
-            if core_state["selected_link"] == core_state["link_count"] - 1:
-               core_state["cy"] += min (max (1, meta_x / 2), 8)
+            if current_loc["selected_link"] == core_state["link_count"] - 1:
+               current_loc["cy"] += min (max (1, meta_x / 2), 8)
                dir_delta = -1
             else:
-               core_state["selected_link"] += 1
+               current_loc["selected_link"] += 1
                moveCursorForLink (core_state, 1)
                displayLinkInfo (bottom, core_state)
             main_needs_redraw = True
@@ -760,7 +766,7 @@ def hyltMain (meta_screen, starting_filename):
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
                dest = os.path.join (core_state["curr_base_path"],
-                core_state["link_list"][core_state["selected_link"]])
+                core_state["link_list"][current_loc["selected_link"]])
                os.system (os.getenv ("EDITOR") + " \"" + dest + "\"")
 
                curses.reset_prog_mode ()
@@ -774,21 +780,22 @@ def hyltMain (meta_screen, starting_filename):
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
                os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
-              
+
                curses.reset_prog_mode ()
                curses.curs_set(1)
                curses.curs_set(0)
                fresh_page = True
                curr_loc_info = None
 
-         elif curses.KEY_RIGHT == keypress or 10 == keypress or curses.KEY_ENTER == keypress:
+         elif 10 == keypress or curses.KEY_ENTER == keypress:
          
             # The big one--jump to a new Hylt page.  First, make sure it's a
             # real page.
-            rel_name = core_state["link_list"][core_state["selected_link"]]
+            rel_name = core_state["link_list"][current_loc["selected_link"]]
             real_path = os.path.normpath (os.path.join (
              core_state["curr_base_path"], rel_name))
             if os.path.isfile (real_path):
+               historyCut (core_state)
                historyAdd (core_state, real_path)
                historyMove (core_state, 1)
                fresh_page = True
