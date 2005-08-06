@@ -63,7 +63,7 @@ CONFIG_CONTROL_DICT = {
    "pyui": {
       "blink_count": {
          "type": "integer",
-         "default": 3
+         "default": 1
       }
    }
 }
@@ -734,6 +734,7 @@ def hyltMain (meta_screen, starting_filename):
             historyCut (core_state)
             for page in result:
                historyAdd (core_state, page)
+               sys.stderr.write(page + "\n")
             historyMove (core_state, 1)
             fresh_page = True
          else:
@@ -811,9 +812,14 @@ def hyltMain (meta_screen, starting_filename):
                historyMove (core_state, 1)
                fresh_page = True
             else:
-               noteMissingPage (bottom, real_path, core_state["x"],
-                config["pyui"]["blink_count"])
-               displayLinkInfo (bottom, core_state)
+#               noteMissingPage (bottom, real_path, core_state["x"],
+#                config["pyui"]["blink_count"])
+#               displayLinkInfo (bottom, core_state)
+               editor = os.getenv("EDITOR", "vi")
+               displayNote(bottom, "File not found. Do you want to create this file using " + os.path.basename(editor) + " ? (y/n) ", core_state["x"] - 1)
+               if (ord('y') == bottom.getch(0, 0)):
+                  os.spawnlp(os.P_WAIT, editor, real_path)
+               displayNote(bottom, real_path, core_state["x"] - 1)
                
 
 if "__main__" == __name__:
