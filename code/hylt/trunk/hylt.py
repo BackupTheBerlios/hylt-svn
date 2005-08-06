@@ -467,17 +467,16 @@ def fixCursorCoords (core_state):
    screen display can fix them up.
    """
    
-   if core_state["history_position"] < 0:
-      return
-
-   if 0 > core_state["history"][core_state["history_position"]]["cx"]:
-      core_state["history"][core_state["history_position"]]["cx"] = 0
-   elif core_state["history"][core_state["history_position"]]["cx"] > core_state["mx"] - 1:
-      core_state["history"][core_state["history_position"]]["cx"] = core_state["mx"] - 1
-   if 0 > core_state["history"][core_state["history_position"]]["cy"]:
-      core_state["history"][core_state["history_position"]]["cy"] = 0
-   elif core_state["history"][core_state["history_position"]]["cy"] > core_state["my"] - 1:
-      core_state["history"][core_state["history_position"]]["cy"] = core_state["my"] - 1
+   if core_state["history_position"] >= 0:
+      curr_location = core_state["history"][core_state["history_position"]]
+      if 0 > curr_location["cx"]:
+         curr_location["cx"] = 0
+      elif curr_location["cx"] > core_state["mx"] - 1:
+         curr_location["cx"] = core_state["mx"] - 1
+      if 0 > curr_location["cy"]:
+         curr_location["cy"] = 0
+      elif curr_location["cy"] > core_state["my"] - 1:
+         curr_location["cy"] = core_state["my"] - 1
 
 def safePath (path):
    """Check the attempted path to make sure that it doesn't
