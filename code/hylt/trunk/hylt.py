@@ -39,6 +39,7 @@ import curses
 import curses.wrapper
 import optparse
 import os.path
+import re
 import sys
 import time
 
@@ -475,6 +476,27 @@ def safePath (path):
 
    return to_return
 
+def regexpSearchDirtree (path, expression):
+   regexp = re.compile(expression, re.IGNORECASE)
+   matches = []
+   for root, dirs, files in os.walk(path, 1):
+      for file in files:
+         current = os.path.join(root, file)
+         if regexp.search(current):
+            matches.append(current)
+   return matches
+
+def smartGo (screen, core_state):
+   prompt = "Go to: "
+   displayNote(screen, prompt, core_state["x"] - 1)
+   curses.curs_set(1)
+   curses.echo()
+   expression = screen.getstr(0, len(prompt))
+   curses.noecho()
+   curses.curs_set(0)
+   displayNote(screen, "Searching for: " + expression, core_state["x"] - 1)
+   return regexpSearchDirtree(".", expression)
+
 def generateConfiguration ():
    """Generate a configuration for a given instance of Hylt.  There
    are multiple config file locations that we need to read from,
@@ -631,6 +653,16 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('r') == keypress:
          fresh_page = True
 
+# Extended regular expression based pathname matching, working directory tree breadth-first traversing and search result based forward page history list creating 'go' feature (note: full room service not is included in trial version)
+      elif ord ('g') == keypress:
+         result = smartGo(bottom, core_state)
+         if len(result):
+            core_state["history"].append (filename)
+            filename = result[0]
+            fresh_page = True
+         else:
+            displayNote(bottom, "No matching files found", core_state["x"] - 1)
+         
       elif curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress:
          if len (core_state["history"]) > 0:
             filename = core_state["history"][-1]
@@ -663,7 +695,7 @@ def hyltMain (meta_screen, starting_filename):
             moveCursorForLink (core_state, dir_delta)
             main_needs_redraw = True
 
-         elif ord ('e') == keypress:
+         elif ord ('E') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
                dest = os.path.join (core_state["curr_base_path"],
@@ -677,7 +709,7 @@ def hyltMain (meta_screen, starting_filename):
                displayHeader (top, core_state)
                displayLinkInfo (bottom, core_state)
 
-         elif ord ('E') == keypress:
+         elif ord ('e') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
                os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
