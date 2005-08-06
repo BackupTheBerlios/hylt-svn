@@ -777,11 +777,12 @@ def hyltMain (meta_screen, starting_filename):
          else:
             displayNote(bottom, "No matching files found", core_state["x"] - 1)
          
-      elif curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress:
+      elif (curses.KEY_LEFT == keypress or curses.KEY_BACKSPACE == keypress or
+       ord (',') == keypress):
          if historyMove (core_state, -1):
             fresh_page = True
 
-      elif curses.KEY_RIGHT == keypress:
+      elif ord ('.') == keypress:
          if historyMove (core_state, 1):
             fresh_page = True
 
@@ -835,7 +836,8 @@ def hyltMain (meta_screen, starting_filename):
                fresh_page = True
                curr_loc_info = None
 
-         elif 10 == keypress or curses.KEY_ENTER == keypress:
+         elif (curses.KEY_RIGHT == keypress or 10 == keypress or
+          curses.KEY_ENTER == keypress):
          
             # The big one--jump to a new Hylt page.  First, make sure it's a
             # real page.
