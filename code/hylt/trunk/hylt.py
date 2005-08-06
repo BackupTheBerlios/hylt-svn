@@ -561,7 +561,7 @@ def generateConfiguration ():
    # Done generating the configuration!  Return it.
    return real_config
 
-def historyAdd (core_state, filename = None):
+def historyAdd (core_state, filename):
    """Add a page to the history.  If there's a filename, it's assumed to be
    from some external source (a search result), and as such has no default
    knowledge of locations on the page, etc.  If there is no filename, it's
@@ -572,42 +572,19 @@ def historyAdd (core_state, filename = None):
    # we were passed a filename, we just append it to the history list; if
    # we weren't passed a filename, we replace the list from this point on
    # with this entry.
-   if filename:
-      filename = core_state["history"][core_state["history_position"]]["filename"]
-      history_dict = {
-         "filename": filename,
-         "cx": core_state["cx"],
-         "cy": core_state["cy"],
-         "selected_link": core_state["selected_link"]
-      }
-
-      history_position = core_state["history_position"]
-
-      # We have to remove everything past the history_position, as
-      # selecting a link kills history.  If the history position is
-      # at the end, this is just an append.  The below slice covers
-      # both cases, since you're at the end of history if:
-      #
-      #   len (history) = history_postion - 1
-      #
-      # which makes the slice just [:].  Very clever.
-      new_history = core_state["history"][:history_position + 1]
-      new_history.append (history_dict)
-      core_state["history"] = new_history
-   else:
-      history_dict = {
-         "filename": filename,
-         "cx": 0,
-         "cy": 0,
-         "selected_link": 0
-      }
-      core_state["history"].append (history_dict)
+   history_dict = {
+      "filename": filename,
+      "cx": 0,
+      "cy": 0,
+      "selected_link": 0
+   }
+   core_state["history"].append (history_dict)
 
 def historyMove (core_state, step):
    """ Loads pages from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
    """
    old_pos = core_state["history_position"]
-   core_state["history_position"] = min(0, max(len(core_state["history"]) - 1, old_pos + step))
+   core_state["history_position"] = max(0, min(len(core_state["history"]) - 1, old_pos + step))
    if core_state["history_position"] != old_pos and core_state["history_position"] >= 0:
       return core_state["history_position"] - old_pos
    else:
