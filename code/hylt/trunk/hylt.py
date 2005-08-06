@@ -501,8 +501,10 @@ def safePath (path):
    return to_return
 
 def regexpSearchDirtree (path, expression):
-   """ Return all pathnames beginning with path that match supplied case-insensitive regular expression.
+   """Get a list of every file in PATH that both matches a given regular
+   expression and is a Hylt file.
    """
+
    regexp = re.compile(expression, re.IGNORECASE)
    matches = []
    for root, dirs, files in os.walk(path, 1):
@@ -518,8 +520,11 @@ def regexpSearchDirtree (path, expression):
    return matches
 
 def smartGo (screen, core_state):
-   """ Display 'go to' prompt on the specified screen, pass entered expression to directory tree search function and return its results.
+   """Displays a 'go to' prompt on the screen; the input from that is
+   fed to regexpSearchDirtree, and that output is passed out to the
+   caller.
    """
+
    prompt = "Go to: "
    displayNote(screen, prompt, core_state["x"] - 1)
    curses.curs_set(1)
@@ -629,8 +634,11 @@ def historyAdd (core_state, filename):
    return len(core_state["history"])
 
 def historyMove (core_state, step):
-   """ Load page from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
+   """ Load a page from the forward (positive step) or backward (negative
+   step) history; return the real number of steps if the move was successful
+   and 0 otherwise.
    """
+
    old_pos = core_state["history_position"]
    core_state["history_position"] = max(0, min(len(core_state["history"]) - 1, old_pos + step))
    if core_state["history_position"] != old_pos and core_state["history_position"] >= 0:
@@ -752,7 +760,10 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('r') == keypress:
          fresh_page = True
 
-# Extended regular expression based pathname matching, working directory tree breadth-first traversing and search result based forward page history list creating 'go' feature (note: full room service not is included in trial version)
+      # Extended regular expression based pathname matching, working directory
+      # tree breadth-first traversing and search result based forward page
+      # history list creating 'go' feature (note: full room service is not
+      # included in trial version)
       elif ord ('g') == keypress:
          result = smartGo(bottom, core_state)
          if len(result):
