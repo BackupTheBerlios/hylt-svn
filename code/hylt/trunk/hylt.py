@@ -64,6 +64,11 @@ CONFIG_CONTROL_DICT = {
       "blink_count": {
          "type": "integer",
          "default": 1
+      },
+      "editor": {
+         "type": "environment",
+         "variable": "EDITOR",
+         "default": "vi"
       }
    }
 }
@@ -552,15 +557,22 @@ def generateConfiguration ():
       for opt, opt_dict in sect_dict.items():
 
          # Okay.  At the moment, there are two elements in every entry:
-         # - "type": "string", "int", "bool"
+         # - "type": "string", "int", "bool", "environment"
+         # - "variable": Environment variable that holds value if not in file
          # - "default": a default value for the element.
 
          # First, make sure it even has a value for this; if not, just
          # use the default.
          if not config_parser.has_option (sect, opt):
-            
-            # There's no value; just use the default.
-            real_config[sect][opt] = opt_dict["default"]
+           
+            # There's no value; just use the default ... unless it's an
+            # environment variable, in which case we try the environment
+            # variable first as a fallback.
+            if "environment" == opt_dict["type"]:
+               real_config[sect][opt] = os.getenv (opt_dict["variable"],
+                opt_dict["default"])
+            else:
+               real_config[sect][opt] = opt_dict["default"]
 
          else:
             
@@ -570,7 +582,7 @@ def generateConfiguration ():
                fetch_function = config_parser.getint
             elif "boolean" == opt_dict["type"]:
                fetch_function = config_parser.getboolean
-            else: # "string" == opt_dict["type"]
+            else: # "string" or "environment" == opt_dict["type"]
                fetch_function = config_parser.get
 
             # Now that we have a function handle, use it in a try/except
@@ -627,6 +639,12 @@ def historyMove (core_state, step):
       return 0
 
 
+def invokeEditor (editor, filename):
+   """Invoke an editor via spawnlp.
+   """
+
+   os.spawnlp (os.P_WAIT, editor, editor, filename)
+
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
@@ -651,6 +669,8 @@ def hyltMain (meta_screen, starting_filename):
 
    # Read in the configuration.
    config = core_state["config"] = generateConfiguration ()
+
+   editor = config["pyui"]["editor"]
 
    # Okay.  History's actually a bad name for this right now, but it'll have
    # to do.  This is a list of pages; it normally tracks history, but can
@@ -780,11 +800,11 @@ def hyltMain (meta_screen, starting_filename):
             main_needs_redraw = True
 
          elif ord ('E') == keypress:
-            if (config["collection"]["editable"] and
-             None != os.getenv ("EDITOR", None)):
+            if config["collection"]["editable"]:
                dest = os.path.join (core_state["curr_base_path"],
                 core_state["link_list"][current_loc["selected_link"]])
-               os.system (os.getenv ("EDITOR") + " \"" + dest + "\"")
+
+               invokeEditor (editor, dest)
 
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -794,9 +814,8 @@ def hyltMain (meta_screen, starting_filename):
                displayLinkInfo (bottom, core_state)
 
          elif ord ('e') == keypress:
-            if (config["collection"]["editable"] and
-             None != os.getenv ("EDITOR", None)):
-               os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
+            if config["collection"]["editable"]:
+               invokeEditor (editor, filename)
 
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -817,13 +836,16 @@ def hyltMain (meta_screen, starting_filename):
                historyMove (core_state, 1)
                fresh_page = True
             else:
-#               noteMissingPage (bottom, real_path, core_state["x"],
-#                config["pyui"]["blink_count"])
-#               displayLinkInfo (bottom, core_state)
-               editor = os.getenv("EDITOR", "vi")
-               displayNote(bottom, "File not found. Do you want to create this file using " + os.path.basename(editor) + " ? (y/n) ", core_state["x"] - 1)
-               if (ord('y') == bottom.getch(0, 0)):
-                  os.spawnlp(os.P_WAIT, editor, real_path)
+               displayNote (bottom,
+                "File not found. Do you want to create this file? [y/N] ",
+                core_state["x"] - 1)
+               response = bottom.getch (0, 0)
+               if ord ('y') == response or ord ('Y') == response:
+                  invokeEditor (editor, real_path)
+
+                  curses.reset_prog_mode ()
+                  curses.curs_set(1)
+                  curses.curs_set(0)
                displayNote(bottom, real_path, core_state["x"] - 1)
                
 
