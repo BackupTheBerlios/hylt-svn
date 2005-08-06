@@ -568,19 +568,17 @@ def historyAdd (core_state, filename = None):
    a snapshot of the current page, and saves that data.
    """
 
-   # We do quite different things depending on whether we got a filename
-   # or not, but both make a new history_dict.
-   history_dict = {}
-
    # Populate the history object and place it in the history stream.  If
    # we were passed a filename, we just append it to the history list; if
    # we weren't passed a filename, we replace the list from this point on
    # with this entry.
    if filename:
-      history_dict["filename"] = core_state["filename"]
-      history_dict["cx"] = core_state["cx"]
-      history_dict["cy"] = core_state["cy"]
-      history_dict["selected_link"] = core_state["selected_link"]
+      history_dict = {
+         "filename": core_state["filename"],
+         "cx": core_state[cx],
+         "cy": core_state[cy],
+         "selected_link" = core_state["selected_link"]
+      }
 
       history_position = core_state["history_position"]
 
@@ -596,11 +594,12 @@ def historyAdd (core_state, filename = None):
       new_history.append (history_dict)
       core_state["history"] = new_history
    else:
-      history_dict["filename"] = filename
-      history_dict["cx"] = 0
-      history_dict["cy"] = 0
-      history_dict["selected_link"] = 0
-
+      history_dict = {
+         "filename": filename,
+         "cx": 0,
+         "cy": 0,
+         "selected_link" = 0
+      }
       core_state["history"].append (history_dict)
 
 def historyMove (core_state, step):
