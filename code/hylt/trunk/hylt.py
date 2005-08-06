@@ -573,10 +573,11 @@ def historyAdd (core_state, filename = None):
    # we weren't passed a filename, we replace the list from this point on
    # with this entry.
    if filename:
+      filename = core_state["history"][core_state["history_position"]]["filename"]
       history_dict = {
-         "filename": core_state["filename"],
-         "cx": core_state[cx],
-         "cy": core_state[cy],
+         "filename": filename,
+         "cx": core_state["cx"],
+         "cy": core_state["cy"],
          "selected_link": core_state["selected_link"]
       }
 
