@@ -304,13 +304,15 @@ def displayPage (screen, core_state):
    if core_state["history_position"] < 0:
       return
 
+   current_loc = core_state["history"][core_state["history_position"]]
+   
    # Print everything we can fit starting where the cursor is.
    screen.clear ()
    display_y = 0
-   cy = core_state["history"][core_state["history_position"]]["cy"]
-   cx = core_state["history"][core_state["history_position"]]["cx"]
+   cy = current_loc["cy"]
+   cx = current_loc["cx"]
    data_array = core_state["data_array"]
-   selected_link = core_state["history"][core_state["history_position"]]["selected_link"]
+   selected_link = current_loc["selected_link"]
    for row_num in range (cy, min (len (data_array), cy + core_state["y"] - 2)):
       display_x = 0
       curr_row = data_array[row_num]
