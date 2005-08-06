@@ -503,7 +503,12 @@ def regexpSearchDirtree (path, expression):
    for root, dirs, files in os.walk(path, 1):
       for file in files:
          current = os.path.join(root, file)
-         if regexp.search(current):
+
+         # There are two criteria for adding a found file to our list:
+         # - It must match the search (obviously); and
+         # - It must end in .hylt.  We don't want spurious results.
+         if (regexp.search(current) and len (current) > 5 and
+          ".hylt" == current[-5:]):
             matches.append(current)
    return matches
 
