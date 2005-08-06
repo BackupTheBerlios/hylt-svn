@@ -561,6 +561,48 @@ def generateConfiguration ():
    # Done generating the configuration!  Return it.
    return real_config
 
+def historyAdd (core_state, filename = None):
+   """Add a page to the history.  If there's a filename, it's assumed to be
+   from some external source (a search result), and as such has no default
+   knowledge of locations on the page, etc.  If there is no filename, it's
+   a snapshot of the current page, and saves that data.
+   """
+
+   # We do quite different things depending on whether we got a filename
+   # or not, but both make a new history_dict.
+   history_dict = {}
+
+   # Populate the history object and place it in the history stream.  If
+   # we were passed a filename, we just append it to the history list; if
+   # we weren't passed a filename, we replace the list from this point on
+   # with this entry.
+   if filename:
+      history_dict["filename"] = core_state["filename"]
+      history_dict["cx"] = core_state["cx"]
+      history_dict["cy"] = core_state["cy"]
+      history_dict["selected_link"] = core_state["selected_link"]
+
+      history_position = core_state["history_position"]
+
+      # We have to remove everything past the history_position, as
+      # selecting a link kills history.  If the history position is
+      # at the end, this is just an append.  The below slice covers
+      # both cases, since you're at the end of history if:
+      #
+      #   len (history) = history_postion - 1
+      #
+      # which makes the slice just [:].  Very clever.
+      new_history = core_state["history"][:history_position + 1]
+      new_history.append (history_dict)
+      core_state["history"] = new_history
+   else:
+      history_dict["filename"] = filename
+      history_dict["cx"] = 0
+      history_dict["cy"] = 0
+      history_dict["selected_link"] = 0
+
+      core_state["history"].append (history_dict)
+
 def historyMove (core_state, step):
    """ Loads pages from forward (positive step) or backward (negative step) history and returns real number of steps if move was successful, 0 otherwise
    """
@@ -571,6 +613,7 @@ def historyMove (core_state, step):
       return core_state["history_position"] - old_pos
    else:
       return 0
+
 
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
@@ -585,7 +628,7 @@ def hyltMain (meta_screen, starting_filename):
 
    # Change to the base path.
    os.chdir (os.path.dirname (starting_filename))
-   filename = os.path.basename (starting_filename)
+   filename = core_state["filename"] = os.path.basename (starting_filename)
    core_state["curr_base_path"] = ""
    
 
@@ -631,12 +674,22 @@ def hyltMain (meta_screen, starting_filename):
             core_state["cx"] = curr_loc_info["cx"]
             core_state["cy"] = curr_loc_info["cy"]
 
-            # Someone may have edited the page since we last loaded it, and
-            # removed all the links.  This is a hell of an edge case, but
-            # why risk it?
+            # Links can be removed between page loads, and the history
+            # jumper defaults to link 0, which doesn't exist on a page
+            # with no links.  In either case, we're safe if we just
+            # change the link count to something more appropriate.
             if core_state["link_count"] > 0:
-               core_state["selected_link"] = curr_loc_info["selected_link"]
+               potential_link = curr_loc_info["selected_link"]
+               if core_state["link_count"] > potential_link:
+                  core_state["selected_link"] = potential_link
+               else:
+
+                  # There are links, but the one we've selected is past them.
+                  # Default to the very last link.
+                  core_state["selected_link"] = core_state["link_count"] - 1
             else:
+
+               # No links on the page.
                core_state["selected_link"] = None
      
          dir_delta = 1
@@ -688,8 +741,14 @@ def hyltMain (meta_screen, starting_filename):
       elif ord ('g') == keypress:
          result = smartGo(bottom, core_state)
          if len(result):
-            core_state["history"].append (filename)
-            filename = result[0]
+            core_state["history"].append ({
+            {
+               "filename": filename,
+               "cx": core_state["cx"],
+               "cy": core_state["cy"],
+               "selected_link": core_state["selected_link"]
+            })
+            filename = core_state["filename"] = result[0]
             fresh_page = True
          else:
             displayNote(bottom, "No matching files found", core_state["x"] - 1)
@@ -698,7 +757,7 @@ def hyltMain (meta_screen, starting_filename):
          if len (core_state["history"]) > 0:
 
             curr_loc_info = core_state["history"].pop ()
-            filename = curr_loc_info["filename"]
+            filename = core_state["filename"] = curr_loc_info["filename"]
             fresh_page = True
 
       # Don't even bother with arrow keys other than back unless link count > 0.
@@ -769,7 +828,7 @@ def hyltMain (meta_screen, starting_filename):
                   "cy": core_state["cy"],
                   "selected_link": core_state["selected_link"]
                })
-               filename = real_path
+               filename = core_state["filename"] = real_path
                fresh_page = True
                curr_loc_info = None
             else:
