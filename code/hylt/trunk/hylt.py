@@ -97,7 +97,7 @@ def exportToHTML (filename, core_state):
    data_array = core_state["data_array"]
    link_list = core_state["link_list"]
    
-   file = open (os.path.join (core_state["base_path"], filename), "w")
+   file = open (filename, "w")
 
    file.write ("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
    file.write ("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n")
@@ -159,9 +159,8 @@ def readHyltFile (filename, core_state):
    
    data_array = []
 
-   base_path = core_state["base_path"]
    curr_base_path = core_state["curr_base_path"]
-   file = open (os.path.join (base_path, filename), "r")
+   file = open (filename, "r")
    curr_state = "text"
    curr_link = None
    link_count = 0
@@ -215,7 +214,7 @@ def readHyltFile (filename, core_state):
                # base path.
                raw_link = os.path.normpath (link_filename + ".hylt")
                possible_link = os.path.join (curr_base_path, raw_link)
-               safe_link = safePath (possible_link, base_path)
+               safe_link = safePath (possible_link)
                if None != safe_link:
 
                   # Add the link to the list of links.
@@ -252,7 +251,7 @@ def readHyltFile (filename, core_state):
                # base path.
                raw_link = os.path.normpath (link_filename + ".hylt")
                possible_link = os.path.join (curr_base_path, raw_link)
-               safe_link = safePath (possible_link, base_path)
+               safe_link = safePath (possible_link)
                if None != safe_link:
 
                   # Add the link to the list of links.
@@ -455,7 +454,7 @@ def fixCursorCoords (core_state):
    elif core_state["cy"] > core_state["my"] - 1:
       core_state["cy"] = core_state["my"] - 1
 
-def safePath (path, base_path):
+def safePath (path):
    """Check the attempted path to make sure that it doesn't
    attempt to escape the 'sandbox' created by the start page
    definition.  Note that things like ../ are perfectly valid
@@ -466,22 +465,17 @@ def safePath (path, base_path):
 
    to_return = None
    
-   attempted_path = os.path.normpath (os.path.join (base_path, path))
+   attempted_path = os.path.normpath (path)
 
-   # Once it's normalized in the above line, the base path better
-   # be the first part of the path.
-
-   if attempted_path.startswith (base_path):
-
-      # Okay, it is.  However, we need to cut off that part of the
-      # path, so that when we join it with the base path, it doesn't
-      # keep stacking.  The lazy way, of course, is to just return
-      # path; do that.
+   # Once it's normalized in the above line, the path should not
+   # start with either '..' or '/', both attempts to escape.
+   if not (attempted_path.startswith("..") or
+    attempted_path.startswith("/")):
       to_return = path
 
    return to_return
 
-def generateConfiguration (base_path):
+def generateConfiguration ():
    """Generate a configuration for a given instance of Hylt.  There
    are multiple config file locations that we need to read from,
    and various default values that must be set if not present in
@@ -491,7 +485,7 @@ def generateConfiguration (base_path):
    config_file_list = [
       SITE_CONFIG_FILE,
       os.path.expanduser ("~/.hylt.conf"),
-      os.path.join (base_path, "hylt.conf")
+      "hylt.conf"
    ]
 
    config_parser = ConfigParser.ConfigParser ()
@@ -555,10 +549,10 @@ def hyltMain (meta_screen, starting_filename):
    meta_y, meta_x = meta_screen.getmaxyx()
    core_state = {"y": meta_y, "x": meta_x}
 
-   # Keep the "base path", as all Hylt links are relative.
-   base_path = core_state["base_path"] = os.path.dirname (starting_filename)
+   # Change to the base path.
+   os.chdir (os.path.dirname (starting_filename))
    filename = os.path.basename (starting_filename)
-   core_state["curr_base_path"] = core_state["base_path"] 
+   core_state["curr_base_path"] = ""
    
 
    # There are three windows: a top status bar, a primary screen, and a bottom
@@ -568,7 +562,7 @@ def hyltMain (meta_screen, starting_filename):
    bottom = meta_screen.subwin (1, meta_x, meta_y - 1, 0)
 
    # Read in the configuration.
-   config = core_state["config"] = generateConfiguration (base_path)
+   config = core_state["config"] = generateConfiguration ()
    core_state["history"] = []
 
    fresh_page = True
@@ -672,9 +666,9 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('e') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
-               rel_name = core_state["link_list"][core_state["selected_link"]]
-               real_filename = os.path.join (base_path, rel_name)
-               os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
+               dest = os.path.join (core_state["curr_base_path"],
+                core_state["link_list"][core_state["selected_link"]])
+               os.system (os.getenv ("EDITOR") + " \"" + dest + "\"")
 
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -686,8 +680,7 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('E') == keypress:
             if (config["collection"]["editable"] and
              None != os.getenv ("EDITOR", None)):
-               real_filename = os.path.join (base_path, filename)
-               os.system (os.getenv ("EDITOR") + " \"" + real_filename + "\"")
+               os.system (os.getenv ("EDITOR") + " \"" + filename + "\"")
               
                curses.reset_prog_mode ()
                curses.curs_set(1)
@@ -699,17 +692,16 @@ def hyltMain (meta_screen, starting_filename):
             # The big one--jump to a new Hylt page.  First, make sure it's a
             # real page.
             rel_name = core_state["link_list"][core_state["selected_link"]]
-            rel_path = os.path.normpath (os.path.join (
+            real_path = os.path.normpath (os.path.join (
              core_state["curr_base_path"], rel_name))
-            real_path = os.path.join (base_path, rel_path)
             if os.path.isfile (real_path):
             
                # Go!  Add this page to the history so we can come back.
                core_state["history"].append (filename)
-               filename = rel_path
+               filename = real_path
                fresh_page = True
             else:
-               noteMissingPage (bottom, rel_path, core_state["x"],
+               noteMissingPage (bottom, real_path, core_state["x"],
                 config["pyui"]["blink_count"])
                displayLinkInfo (bottom, core_state)
                
