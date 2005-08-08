@@ -847,13 +847,9 @@ def hyltMain (meta_screen, starting_filename):
          elif ord ('d') == keypress:
             if config["documentation"]["documentation_root"]:
 	       if os.path.isfile (config["documentation"]["documentation_root"]):
-	          curses.wrapper (hyltMain, config["documentation"]["documentation_root"])
-
-                  curses.reset_prog_mode ()
-                  curses.curs_set(1)
-                  curses.curs_set(0)
-                  main_needs_redraw = True
-
+	          current_directory = os.getcwd()
+		  hyltMain(meta_screen,config["documentation"]["documentation_root"])
+		  os.chdir(current_directory)
 
          elif (curses.KEY_RIGHT == keypress or 10 == keypress or
           curses.KEY_ENTER == keypress):
