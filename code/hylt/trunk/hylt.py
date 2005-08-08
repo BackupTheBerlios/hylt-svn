@@ -60,6 +60,12 @@ CONFIG_CONTROL_DICT = {
          "default": True
       }
    },
+   "documentation": {
+      "documentation_root": {
+         "type": "string",
+	 "default": "/usr/share/hylt/doc/Documentation.hylt"
+      }
+   },
    "pyui": {
       "blink_count": {
          "type": "integer",
@@ -837,6 +843,17 @@ def hyltMain (meta_screen, starting_filename):
                curses.curs_set(0)
                fresh_page = True
                curr_loc_info = None
+
+         elif ord ('d') == keypress:
+            if config["documentation"]["documentation_root"]:
+	       if os.path.isfile (config["documentation"]["documentation_root"]):
+	          curses.wrapper (hyltMain, config["documentation"]["documentation_root"])
+
+                  curses.reset_prog_mode ()
+                  curses.curs_set(1)
+                  curses.curs_set(0)
+                  main_needs_redraw = True
+
 
          elif (curses.KEY_RIGHT == keypress or 10 == keypress or
           curses.KEY_ENTER == keypress):
