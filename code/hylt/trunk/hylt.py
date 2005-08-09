@@ -894,7 +894,12 @@ if "__main__" == __name__:
    option_parser = optparse.OptionParser ()
    options, args = option_parser.parse_args ()
    if len (args) == 1:
-      filename = os.path.normpath(args[0])
+
+      # Add /Start.hylt at the end if the last five characters aren't .hylt.
+      potential_filename = args[0]
+      if (len (potential_filename) < 5) or (".hylt" != potential_filename[-5:]):
+         potential_filename += "/Start.hylt"
+      filename = os.path.normpath (potential_filename)
    elif len (args) == 0:
       filename = "./Start.hylt"
    else:
