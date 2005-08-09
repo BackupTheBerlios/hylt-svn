@@ -30,4 +30,7 @@ Exporting:
      a website. (phil)
 
 UI:
-   * Online help, implented as Hylt pages, of course! (jwvernon)
+   * Key quick reference.  I don't think this should be an actual Hylt
+     page, as I don't want it to rely on the existence of any given file, but
+     it may need to be an internal variable instead, which means changing
+     loadHyltPage into also being able to handle that.
