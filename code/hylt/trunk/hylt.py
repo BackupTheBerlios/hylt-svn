@@ -598,7 +598,9 @@ def generateConfiguration ():
             try:
                opt_value = fetch_function (sect, opt)
             except:
-               sys.stderr.write ("ERROR: Configuration file option " + opt + " in section " + sect + " is incorrectly set.  Using the default.  Please check your configuration.\n")
+               sys.stderr.write ("ERROR: Configuration file option " + opt +
+                " in section " + sect + " is incorrectly set.  Using the" +
+                " default.  Please check your configuration.\n")
                opt_value = opt_dict["default"]
                   
             real_config[sect][opt] = opt_value
@@ -654,7 +656,22 @@ def invokeEditor (editor, filename):
    """Invoke an editor via spawnlp.
    """
 
-   os.spawnlp (os.P_WAIT, editor, editor, filename)
+   # We need to make any missing subdirectories in the path.
+   path_to_check = os.path.dirname (filename)
+   should_edit = True
+   if not os.path.exists (path_to_check):
+      try:
+         os.makedirs (os.path.dirname (filename))
+      except:
+         # Something bad happened; probably a dead symlink.  No real error
+         # handling code yet, so just don't bother invoking the editor.
+         # (Of course, it could be a perms issue, which means this might
+         # actually be common.  Ah, well.  We'll deal with this at some
+         # later date.)
+         should_edit = False
+
+   if should_edit:
+      os.spawnlp (os.P_WAIT, editor, editor, filename)
 
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
