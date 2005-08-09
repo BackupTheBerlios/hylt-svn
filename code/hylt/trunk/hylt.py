@@ -61,10 +61,6 @@ CONFIG_CONTROL_DICT = {
       }
    },
    "pyui": {
-      "blink_count": {
-         "type": "integer",
-         "default": 1
-      },
       "documentation_root": {
          "type": "string",
 	 "default": "/usr/share/hylt/doc/pyui/Documentation.hylt"
