@@ -859,8 +859,8 @@ def hyltMain (meta_screen, starting_filename):
                historyMove (core_state, 1)
                fresh_page = True
             else:
-               displayNote (bottom,
-                "File not found. Do you want to create this file? [y/N] ",
+               displayNote (bottom, "|" + rel_name +
+                "| not found. Do you want to create this file? [y/N] ",
                 core_state["x"] - 1)
                response = bottom.getch (0, 0)
                if ord ('y') == response or ord ('Y') == response:
