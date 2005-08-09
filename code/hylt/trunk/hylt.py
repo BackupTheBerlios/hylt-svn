@@ -150,7 +150,7 @@ def exportToHTML (filename, data_array, link_list):
    file.close ()
 
 
-def readHyltFile (filename, core_state):
+def readHyltFile (filename, core_state, file_is_variable = False):
    """Given a particular filename, this function parses it and returns the
    collection of values (in core_state) necessary for properly handling
    the display and navigation of the page.
@@ -163,7 +163,11 @@ def readHyltFile (filename, core_state):
    data_array = []
 
    curr_base_path = core_state["curr_base_path"]
-   file = open (filename, "r")
+
+   # If the file is actually a variable, we don't want to open it, as that
+   # op doesn't work on lists.
+   if not file_is_variable:
+      file = open (filename, "r")
    curr_state = "text"
    curr_link = None
    link_count = 0
