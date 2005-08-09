@@ -60,16 +60,14 @@ CONFIG_CONTROL_DICT = {
          "default": True
       }
    },
-   "documentation": {
-      "documentation_root": {
-         "type": "string",
-	 "default": "/usr/share/hylt/doc/Documentation.hylt"
-      }
-   },
    "pyui": {
       "blink_count": {
          "type": "integer",
          "default": 1
+      },
+      "documentation_root": {
+         "type": "string",
+	 "default": "/usr/share/hylt/doc/pyui/Documentation.hylt"
       },
       "editor": {
          "type": "environment",
@@ -845,11 +843,11 @@ def hyltMain (meta_screen, starting_filename):
                curr_loc_info = None
 
          elif ord ('d') == keypress:
-            if config["documentation"]["documentation_root"]:
-	       if os.path.isfile (config["documentation"]["documentation_root"]):
-	          current_directory = os.getcwd()
-		  hyltMain(meta_screen,config["documentation"]["documentation_root"])
-		  os.chdir(current_directory)
+            if config["pyui"]["documentation_root"]:
+	       if os.path.isfile (config["pyui"]["documentation_root"]):
+	          current_directory = os.getcwd ()
+		  hyltMain (meta_screen,config["pyui"]["documentation_root"])
+		  os.chdir (current_directory)
 
          elif (curses.KEY_RIGHT == keypress or 10 == keypress or
           curses.KEY_ENTER == keypress):
