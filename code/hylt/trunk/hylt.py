@@ -19,7 +19,7 @@
 #
 # (The license can be found in LICENSE.)
 
-"""hylt v0.1.1-dev
+"""hylt v0.1.1
 
 Hylt is a text-based mini-Wiki, or something approaching that.  While
 technically there is a separation between the file format and the
