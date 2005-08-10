@@ -63,7 +63,11 @@ CONFIG_CONTROL_DICT = {
    "pyui": {
       "documentation_root": {
          "type": "string",
-	 "default": "/usr/share/hylt/doc/pyui/Documentation.hylt"
+	 "default": "/usr/share/hylt/doc/pyui/Start.hylt"
+      },
+      "keyboard_reference": {
+         "type": "string",
+	 "default": "/usr/share/hylt/doc/pyui/KeyboardReference.hylt"
       },
       "editor": {
          "type": "environment",
@@ -673,6 +677,17 @@ def invokeEditor (editor, filename):
    if should_edit:
       os.spawnlp (os.P_WAIT, editor, editor, filename)
 
+def convertFilenameToHylt (filename):
+   """Converts a filename to a potential Hylt filename.
+   """
+
+   # Add /Start.hylt at the end if the last five characters aren't .hylt.
+   potential_filename = args[0]
+   if (len (potential_filename) < 5) or (".hylt" != potential_filename[-5:]):
+      potential_filename += "/Start.hylt"
+
+   return (os.path.normpath (potential_filename))
+
 def hyltMain (meta_screen, starting_filename):
    """The core Hylt functionality.  Contains the main input and
    display loops, lots of initialization, and so on.
@@ -856,12 +871,17 @@ def hyltMain (meta_screen, starting_filename):
                curr_loc_info = None
 
          elif ord ('d') == keypress:
-            if config["pyui"]["documentation_root"]:
-	       if os.path.isfile (config["pyui"]["documentation_root"]):
-	          current_directory = os.getcwd ()
-		  hyltMain (meta_screen,config["pyui"]["documentation_root"])
-		  os.chdir (current_directory)
-
+            if os.path.isfile (config["pyui"]["documentation_root"]):
+               current_directory = os.getcwd ()
+               hyltMain (meta_screen,config["pyui"]["documentation_root"])
+               os.chdir (current_directory)
+         
+         elif ord ('?') == keypress:
+            if os.path.isfile (config["pyui"]["keyboard_reference"]):
+               current_directory = os.getcwd ()
+               hyltMain (meta_screen,config["pyui"]["keyboard_reference"])
+               os.chdir (current_directory)
+         
          elif (curses.KEY_RIGHT == keypress or 10 == keypress or
           curses.KEY_ENTER == keypress):
          
@@ -894,12 +914,7 @@ if "__main__" == __name__:
    option_parser = optparse.OptionParser ()
    options, args = option_parser.parse_args ()
    if len (args) == 1:
-
-      # Add /Start.hylt at the end if the last five characters aren't .hylt.
-      potential_filename = args[0]
-      if (len (potential_filename) < 5) or (".hylt" != potential_filename[-5:]):
-         potential_filename += "/Start.hylt"
-      filename = os.path.normpath (potential_filename)
+      filename = convertFilenameToHylt (args[0])
    elif len (args) == 0:
       filename = "./Start.hylt"
    else:
