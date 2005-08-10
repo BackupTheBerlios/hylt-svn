@@ -661,9 +661,9 @@ def invokeEditor (editor, filename):
    """
 
    # We need to make any missing subdirectories in the path.
-   path_to_check = os.path.dirname (filename)
+   path_to_check = os.path.dirname (filename).strip ()
    should_edit = True
-   if not os.path.exists (path_to_check):
+   if ("" != path_to_check) and (not os.path.exists (path_to_check)):
       try:
          os.makedirs (os.path.dirname (filename))
       except:
