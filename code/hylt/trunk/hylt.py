@@ -700,7 +700,8 @@ def hyltMain (meta_screen, starting_filename):
    core_state = {"y": meta_y, "x": meta_x}
 
    # Change to the base path.
-   os.chdir (os.path.dirname (starting_filename))
+   if "" != os.path.dirname (starting_filename):
+      os.chdir (os.path.dirname (starting_filename))
    core_state["curr_base_path"] = ""
    
 
