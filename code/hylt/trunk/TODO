@@ -24,9 +24,6 @@ Documentation:
    * The Hylt format needs to be documented.  It's not complex, but
      that's no excuse. (phil)
 
-Editing:
-   * Autocreate subdirectories if they don't already exist. (phil)
-
 Exporting:
    * The ability to export an entire Hylt collection into XHTML
      (using the code already contributed by c0ffee) would be nice,
@@ -34,7 +31,4 @@ Exporting:
      a website. (phil)
 
 UI:
-   * Key quick reference.  I don't think this should be an actual Hylt
-     page, as I don't want it to rely on the existence of any given file, but
-     it may need to be an internal variable instead, which means changing
-     loadHyltPage into also being able to handle that.
+   * Nothing at the moment.
