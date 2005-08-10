@@ -1,0 +1,38 @@
+MOVEMENT KEYS
+
+h - Scroll left    |         [ - Page left
+j - Scroll down    | Page Down - Page down
+k - Scroll up      | Page Up   - Page up",  
+l - Scroll right   |         ] - Page right
+
+LINK NAVIGATION
+
+Right Arrow, Enter - Follow link
+        Down Arrow - Next link
+          Up Arrow - Previous link
+             Space - Return view to link
+
+PAGE LIST NAVIGATION
+
+Left Arrow, Backspace, , - Previous page in list
+                       . - Next page in list
+
+EDITING
+
+e - Edit this page
+E - Edit this link
+r - Reload this page
+
+SEARCHING
+
+g - Go to pages that match search string
+    (Every hit is added to the page list.)
+
+DOCUMENTATION
+
+? - Keyboard shortcut list (this!)
+d - View PyUI documentation
+"
+QUITTING
+
+q - Quit

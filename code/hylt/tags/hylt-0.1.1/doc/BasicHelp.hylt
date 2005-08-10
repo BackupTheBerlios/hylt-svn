@@ -1,0 +1,19 @@
+This is the Hylt Basic Help page.
+
+Hylt uses the h,j,k, and l keys in a vi-like way for navigation.
+
+Use k to scroll up.
+Use j to scroll down.
+Use l to scroll right.  Gone too far?  Use h to scroll left.
+Give it a try!
+
+The arrow keys and Enter are used to navigate links.
+
+Use the UP-Arrow and DOWN-Arrow keys to navigate links.
+Use the RIGHT-Arrow or Enter to follow a link.
+Use the LEFT-Arrow key to go back.
+Give it a try [[ArrowPractice|here]].
+And [[MoreArrowPractice|here]].
+Finally [[EvenMoreArrowPractice|here]].
+
+I have shown you the basics.  Press the q key to quit hylt.

@@ -1,0 +1,34 @@
+There are lots of things that still can be/need to be done with Hylt.
+This file attempts to list those things that we know about and are
+planning to work on.  Names in parentheses show developers planning
+on implementing these.
+
+Core:
+   * Better error handling.  Lots of things could probably tank the
+     program right now.
+   * Tighter separation.  Many variables are stored in a "state"
+     dictionary that gets passed around between functions.  This
+     should probably be made less prevalent.
+   * Command-line parsing.  Files passed in should be handled
+     better.
+   * However Curses is being used, it's making it flicker a lot,
+     especially on remote sessions.  I think there's entirely too
+     much redrawing going on.  This needs to be made more efficient,
+     so it's not as ugly.
+   * Make the entire program non-blocking.  This is mainly so that
+     messages can be displayed for a certain amount of time; for
+     example, displaying error messages in the bottom status bar
+     for a few seconds without interrupting the use of the keyboard.
+
+Documentation:
+   * The Hylt format needs to be documented.  It's not complex, but
+     that's no excuse. (phil)
+
+Exporting:
+   * The ability to export an entire Hylt collection into XHTML
+     (using the code already contributed by c0ffee) would be nice,
+     as it could allow scripting to sync up a local Hylt collo with
+     a website. (phil)
+
+UI:
+   * Nothing at the moment.

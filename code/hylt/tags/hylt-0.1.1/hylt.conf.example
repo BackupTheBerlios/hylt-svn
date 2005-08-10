@@ -1,0 +1,13 @@
+# This is an example configuration file for Hylt.  It can be placed at
+# /etc/hylt.conf if you want every user to use its settings as the
+# defaults, or you can put it in ~/.hylt.conf if you want them to be
+# strictly personal.  Eventually all of this will be nicely documented,
+# but for the time being the code's the best documentation.  (Sorry!)
+
+[pyui]
+
+real_doc_root = /usr/share/hylt/doc/pyui
+
+documentation_root = %(real_doc_root)s/Start.hylt
+keyboard_reference = %(real_doc_root)s/KeyboardReference.hylt
+

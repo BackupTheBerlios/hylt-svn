@@ -1,0 +1,78 @@
+hylt.py v0.1.1
+------- ------
+
+Hylt is a HyperLinked Text file format; hylt.py is a viewer for that format.
+The format itself is pretty dead simple, and viewing the .hylt files in the
+test-pages/ directory will give you an idea as to how they work.  If you've
+ever edited a MediaWiki wiki, it's pretty much identical in the way it does
+things (except much less complex); Wikipedia is the most famous example of
+a MediaWiki wiki.
+
+This is the initial public release of Hylt and hylt.py.  There are bugs, but
+it should work well enough for you to use it as it's intended--a local
+collection of flat-text documents that are all linked together.  The main
+reason I (Phil) started development on Hylt was to have something to write
+notes for my stories and novels in without having to run a full-fledged
+Wiki, and with the ability to put the "source files" in a revision control
+system like Subversion.  In that I believe I've succeeded.
+
+My success only comes on the shoulders of other great folks, though, and I
+want to acknowledge them here:
+
+* c0ffee for his XHTML export code,
+* John Vernon for his help in implementing help and other sundry bits, and
+* mandos for his excellent search code, page list functionality, and moral
+  support.
+
+INSTALLATION
+------------
+
+Technically hylt.py doesn't need to be installed anywhere, although if you
+want online help or key references you need to have a few files in a few
+places.  By default the program wants them in /usr/share/hylt/doc; if you
+just cp -pr the doc/ directory to that location you should be fine.  (You
+will obviously need to be root to do this.)
+
+hylt can also make use of configuration files; although there aren't many
+options at the moment, more will be added in the future.  The program
+searches three locations for its configuration, and any options in a later
+spot override the previous ones:
+
+* /etc/hylt.conf
+* ~/.hylt.conf
+* hylt.conf in the collection directory
+
+The configuration files are in the standard Python config format, and a
+look at the top of hylt.py will show you all of the possible options;
+better documentation will be available in a later release.
+
+USING HYLT.PY
+----- -------
+
+Launch hylt.py with:
+
+   hylt.py some-dir-or-file
+
+If it's a directory, it should have a Start.hylt inside, which hylt.py
+will automagically load.  If it's a file, it has to end in .hylt, or
+the program will append "/Start.hylt" to the name.  (This is partly a
+safety mechanism; it's meant to be fairly difficult to break out of the
+"prison" of the starting directory in Hylt.)
+
+From that point you can browse pages much like the text-mode browser
+Links; a properly-configured system will have documentation available
+with both the 'd' key and the '?' key.  (You can also see these docs
+in the doc/pyui directory here.)  Importantly, you can edit the page you
+are currently viewing with the 'e' key.
+
+CONTACTING US
+---------- --
+
+If you have any ideas, suggestions, comments, or a desire to help us
+develop this program, by all means contact us.  eMail Phil at:
+
+   phil@thenexusproject.org
+
+and he'll be happy to answer any of your questions.
+
+Thanks for checking this program out!  We hope it'll be useful to you.
