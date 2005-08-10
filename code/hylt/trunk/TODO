@@ -15,6 +15,10 @@ Core:
      especially on remote sessions.  I think there's entirely too
      much redrawing going on.  This needs to be made more efficient,
      so it's not as ugly.
+   * Make the entire program non-blocking.  This is mainly so that
+     messages can be displayed for a certain amount of time; for
+     example, displaying error messages in the bottom status bar
+     for a few seconds without interrupting the use of the keyboard.
 
 Documentation:
    * The Hylt format needs to be documented.  It's not complex, but
