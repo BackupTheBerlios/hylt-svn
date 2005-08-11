@@ -32,7 +32,11 @@ DOCUMENTATION
 
 ? - Keyboard shortcut list (this!)
 d - View PyUI documentation
-"
+
+EXPORTING
+
+x - Export this page to XHTML
+
 QUITTING
 
 q - Quit
