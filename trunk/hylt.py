@@ -806,7 +806,6 @@ def hyltMain (meta_screen, starting_filename):
             historyCut (core_state)
             for page in result:
                historyAdd (core_state, page)
-               sys.stderr.write(page + "\n")
             historyMove (core_state, 1)
             fresh_page = True
          else:
@@ -821,7 +820,29 @@ def hyltMain (meta_screen, starting_filename):
          if historyMove (core_state, 1):
             fresh_page = True
 
-      # Don't even bother with arrow keys other than back unless link count > 0.
+      elif ord ('e') == keypress:
+         if config["collection"]["editable"]:
+            invokeEditor (editor, filename)
+
+            curses.reset_prog_mode ()
+            curses.curs_set(1)
+            curses.curs_set(0)
+            fresh_page = True
+            curr_loc_info = None
+
+      elif ord ('d') == keypress:
+         if os.path.isfile (config["pyui"]["documentation_root"]):
+            current_directory = os.getcwd ()
+            hyltMain (meta_screen,config["pyui"]["documentation_root"])
+            os.chdir (current_directory)
+         
+      elif ord ('?') == keypress:
+         if os.path.isfile (config["pyui"]["keyboard_reference"]):
+            current_directory = os.getcwd ()
+            hyltMain (meta_screen,config["pyui"]["keyboard_reference"])
+            os.chdir (current_directory)
+
+      # Don't even bother with link actions if there are no links.
       elif core_state["link_count"] > 0:
          if curses.KEY_UP == keypress:
             if current_loc["selected_link"] == 0:
@@ -861,28 +882,6 @@ def hyltMain (meta_screen, starting_filename):
                displayHeader (top, core_state)
                displayLinkInfo (bottom, core_state)
 
-         elif ord ('e') == keypress:
-            if config["collection"]["editable"]:
-               invokeEditor (editor, filename)
-
-               curses.reset_prog_mode ()
-               curses.curs_set(1)
-               curses.curs_set(0)
-               fresh_page = True
-               curr_loc_info = None
-
-         elif ord ('d') == keypress:
-            if os.path.isfile (config["pyui"]["documentation_root"]):
-               current_directory = os.getcwd ()
-               hyltMain (meta_screen,config["pyui"]["documentation_root"])
-               os.chdir (current_directory)
-         
-         elif ord ('?') == keypress:
-            if os.path.isfile (config["pyui"]["keyboard_reference"]):
-               current_directory = os.getcwd ()
-               hyltMain (meta_screen,config["pyui"]["keyboard_reference"])
-               os.chdir (current_directory)
-         
          elif (curses.KEY_RIGHT == keypress or 10 == keypress or
           curses.KEY_ENTER == keypress):
          
