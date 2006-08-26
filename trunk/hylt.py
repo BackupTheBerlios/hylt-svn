@@ -921,4 +921,8 @@ if "__main__" == __name__:
       print "ERROR: You must pass either no parameters (which uses index.hylt)"
       print "or a single filename to use."
       sys.exit (0)
+   if not os.path.isfile (filename):
+      print "ERROR: %s does not exist." % (filename)
+      print "Please pass in a valid Hylt file or directory."
+      sys.exit (0)
    curses.wrapper (hyltMain, filename)
