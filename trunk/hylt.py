@@ -918,7 +918,7 @@ if "__main__" == __name__:
    elif len (args) == 0:
       filename = "./Start.hylt"
    else:
-      print "ERROR: You must pass either no parameters (which uses index.hylt)"
+      print "ERROR: You must pass either no parameters (which uses Start.hylt)"
       print "or a single filename to use."
       sys.exit (0)
    if not os.path.isfile (filename):
